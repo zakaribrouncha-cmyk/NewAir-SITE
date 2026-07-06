@@ -3,23 +3,23 @@
   const tiktokUrl = "https://www.tiktok.com/@nhc0023";
   const whitelistKey = "newair-whitelist-candidatures";
   const blockedPaths = ["/cartes", "/jeu", "/combat", "/marche", "/classement"];
+  const tiktokSvg = '<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5" aria-hidden="true"><path d="M16.6 3c.31 2.16 1.52 3.73 3.58 4.43v3.31a7.77 7.77 0 0 1-3.55-.98v5.46c0 3.53-2.35 5.78-5.64 5.78-3.1 0-5.17-2.02-5.17-4.9 0-3.25 2.55-5.26 6.03-4.83v3.4c-1.32-.25-2.26.29-2.26 1.34 0 .86.68 1.45 1.64 1.45 1.1 0 1.82-.66 1.82-2.18V3h3.55Z"></path></svg>';
   const textRules = [[/OBSIDIAN/g,"NewAir"],[/Obsidian/g,"NewAir"],[/obsidian/g,"newair"],[/CITYBACK/g,"NewAir"],[/CityBack/g,"NewAir"],[/cityback/g,"newair"]];
   function fixMojibake(text){if(!/[ÃÂâ€]/.test(text||""))return text||"";try{return decodeURIComponent(escape(text))}catch{return text||""}}
   function cleanText(text){return textRules.reduce((value,rule)=>value.replace(rule[0],rule[1]),fixMojibake(text||""))}
   function walkAndFix(root){if(!root)return;if(root.nodeType===Node.TEXT_NODE){const next=cleanText(root.nodeValue||"");if(next!==root.nodeValue)root.nodeValue=next;return}if(root.nodeType!==Node.ELEMENT_NODE)return;["href","src","alt","aria-label","placeholder","title"].forEach(attr=>{if(!root.hasAttribute(attr))return;let value=cleanText(root.getAttribute(attr)||"");value=value.replace(/https:\/\/discord\.gg\/[^"'\s]+/g,discordUrl).replace(/https:\/\/www\.tiktok\.com\/@[^"'\s]+/g,tiktokUrl).replace(/\/assets\/obsidian-/g,"/assets/newair-").replace(/\/assets\/cityback-/g,"/assets/newair-");if(value!==root.getAttribute(attr))root.setAttribute(attr,value)});const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);nodes.forEach(walkAndFix)}
-  function installSocials(){document.querySelectorAll('a[href*="discord.gg"]').forEach(link=>{link.href=discordUrl})}
-  function addEquipeNav(){
-    document.querySelectorAll('ul').forEach(ul=>{
-      if(ul.dataset.newairEquipeNav==="1")return;
-      const hasAccueil=[...ul.querySelectorAll('a')].some(a=>(a.textContent||"").trim().toUpperCase()==="ACCUEIL");
-      if(!hasAccueil)return;
-      ul.dataset.newairEquipeNav="1";
-      const li=document.createElement('li');
-      li.innerHTML='<a href="/equipe/" class="text-[11px] xl:text-xs font-bold tracking-[0.25em] xl:tracking-[0.3em] whitespace-nowrap transition-colors text-white/70 hover:text-white">ÉQUIPE</a>';
-      const compte=[...ul.children].find(child=>(child.textContent||"").toUpperCase().includes('COMPTE'));
-      if(compte)ul.insertBefore(li,compte);else ul.appendChild(li);
+  function installSocials(){
+    document.querySelectorAll('a[href*="instagram.com"],a[href*="youtube.com"],a[aria-label*="Instagram" i],a[aria-label*="YouTube" i]').forEach(link=>link.remove());
+    document.querySelectorAll('a[href*="discord.gg"]').forEach(link=>{link.href=discordUrl});
+    const socialContainers=new Set();
+    document.querySelectorAll('a[href*="discord.gg"],a[href*="tiktok.com"]').forEach(link=>{if(link.parentElement)socialContainers.add(link.parentElement)});
+    socialContainers.forEach(container=>{
+      container.querySelectorAll('a[href*="instagram.com"],a[href*="youtube.com"]').forEach(link=>link.remove());
+      if(container.querySelector('a[data-newair-tiktok="1"],a[href*="tiktok.com"]'))return;
+      const link=document.createElement('a');link.href=tiktokUrl;link.target='_blank';link.rel='noreferrer';link.dataset.newairTiktok='1';link.setAttribute('aria-label','TikTok');link.className='hover:text-white transition-colors';link.innerHTML=tiktokSvg;container.appendChild(link);
     });
   }
+  function addEquipeNav(){document.querySelectorAll('ul').forEach(ul=>{if(ul.dataset.newairEquipeNav==="1")return;const hasAccueil=[...ul.querySelectorAll('a')].some(a=>(a.textContent||"").trim().toUpperCase()==="ACCUEIL");if(!hasAccueil)return;ul.dataset.newairEquipeNav="1";const li=document.createElement('li');li.innerHTML='<a href="/equipe/" class="text-[11px] xl:text-xs font-bold tracking-[0.25em] xl:tracking-[0.3em] whitespace-nowrap transition-colors text-white/70 hover:text-white">ÉQUIPE</a>';const compte=[...ul.children].find(child=>(child.textContent||"").toUpperCase().includes('COMPTE'));if(compte)ul.insertBefore(li,compte);else ul.appendChild(li)})}
   function saveLocalCandidature(data){const rows=JSON.parse(localStorage.getItem(whitelistKey)||"[]");const row={id:`wl_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,created_at:new Date().toISOString(),status:"pending",...data};rows.unshift(row);localStorage.setItem(whitelistKey,JSON.stringify(rows));return row}
   function findCandidate(value){if(!value||typeof value!=="object")return null;if(value.discord_tag||value.rp_firstname||value.rp_lastname||value.rp_project)return value;for(const key of Object.keys(value)){const found=findCandidate(value[key]);if(found)return found}return null}
   function cleanLoginPage(){if(!location.pathname.startsWith("/login"))return;document.querySelectorAll(".newair-admin-login-helper").forEach(node=>node.remove());const emailInput=document.querySelector('input[type="email"], input[placeholder*="email" i]');const passInput=document.querySelector('input[type="password"]');if(!emailInput||!passInput)return;emailInput.placeholder="Adresse email";passInput.placeholder="Mot de passe"}
