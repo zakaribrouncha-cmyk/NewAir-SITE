@@ -38,12 +38,20 @@ def public_base_url():
 
 def discord_config():
     redirect_uri = os.environ.get("DISCORD_REDIRECT_URI") or f"{public_base_url().rstrip('/')}/api/discord/callback"
+    all_roles = []
+    all_roles += env_list("DISCORD_ADMIN_ROLE_IDS")
+    all_roles += env_list("DISCORD_STAFF_ROLE_IDS")
+    all_roles += env_list("DISCORD_SUPERADMIN_ROLE_IDS")
+    all_roles += env_list("DISCORD_FONDATEUR_ROLE_IDS")
     return {
         "client_id": os.environ.get("DISCORD_CLIENT_ID", "").strip(),
         "client_secret": os.environ.get("DISCORD_CLIENT_SECRET", "").strip(),
         "bot_token": os.environ.get("DISCORD_BOT_TOKEN", "").strip(),
         "guild_id": os.environ.get("DISCORD_GUILD_ID", "").strip(),
-        "role_ids": env_list("DISCORD_ADMIN_ROLE_IDS"),
+        "role_ids": all_roles,
+        "staff_roles": env_list("DISCORD_STAFF_ROLE_IDS"),
+        "superadmin_roles": env_list("DISCORD_SUPERADMIN_ROLE_IDS"),
+        "fondateur_roles": env_list("DISCORD_FONDATEUR_ROLE_IDS"),
         "redirect_uri": redirect_uri,
     }
 
@@ -90,11 +98,60 @@ def get_discord_member(user_id):
     )
 
 
-def member_has_admin_role(member):
+def member_grade(roles):
     cfg = discord_config()
+    roles = set(roles or [])
+    if roles.intersection(set(cfg["fondateur_roles"])):
+        return "Fondateur"
+    if roles.intersection(set(cfg["superadmin_roles"])):
+        return "SuperAdmin"
+    if roles.intersection(set(cfg["staff_roles"])):
+        return "Staff"
+    if roles.intersection(set(env_list("DISCORD_ADMIN_ROLE_IDS"))):
+        return "Admin"
+    return None
+
+
+def member_has_admin_role(member):
     roles = set(member.get("roles") or [])
-    needed = set(cfg["role_ids"])
-    return bool(roles.intersection(needed))
+    return bool(roles.intersection(set(discord_config()["role_ids"])))
+
+
+def discord_avatar(user):
+    avatar = user.get("avatar")
+    if not avatar:
+        return ""
+    ext = "gif" if avatar.startswith("a_") else "png"
+    return f"https://cdn.discordapp.com/avatars/{user.get('id')}/{avatar}.{ext}?size=256"
+
+
+def discord_team():
+    cfg = discord_config()
+    if not cfg["bot_token"] or not cfg["guild_id"]:
+        return {"members": []}
+    try:
+        data = discord_request(
+            f"https://discord.com/api/guilds/{cfg['guild_id']}/members?limit=1000",
+            headers={"Authorization": f"Bot {cfg['bot_token']}"},
+        )
+        members = []
+        for item in data:
+            grade = member_grade(item.get("roles", []))
+            if not grade:
+                continue
+            user = item.get("user", {})
+            name = item.get("nick") or user.get("global_name") or user.get("username") or "Staff NewAir"
+            members.append({
+                "name": name,
+                "role": grade,
+                "discord_id": user.get("id", ""),
+                "avatar": discord_avatar(user),
+                "subtitle": f"Rôle Discord : {grade}",
+            })
+        return {"members": members}
+    except Exception as exc:
+        print("Discord team error:", exc)
+        return {"members": []}
 
 
 def cleanup_sessions():
@@ -172,6 +229,9 @@ class NewAirHandler(SimpleHTTPRequestHandler):
         path = urlparse(self.path).path
         query = parse_qs(urlparse(self.path).query)
 
+        if path == "/api/team":
+            return self.send_json(discord_team())
+
         if path == "/api/admin/me":
             session = self.current_admin()
             if not session:
@@ -194,6 +254,9 @@ class NewAirHandler(SimpleHTTPRequestHandler):
                         "DISCORD_BOT_TOKEN",
                         "DISCORD_GUILD_ID",
                         "DISCORD_ADMIN_ROLE_IDS",
+                        "DISCORD_STAFF_ROLE_IDS",
+                        "DISCORD_SUPERADMIN_ROLE_IDS",
+                        "DISCORD_FONDATEUR_ROLE_IDS",
                     ],
                 }, 500)
             cleanup_sessions()
@@ -223,6 +286,7 @@ class NewAirHandler(SimpleHTTPRequestHandler):
                 if not member_has_admin_role(member):
                     return self.redirect("/admin/?error=role")
                 session_id = secrets.token_urlsafe(32)
+                grade = member_grade(member.get("roles", [])) or "Admin"
                 SESSIONS[session_id] = {
                     "expires": time.time() + 86400,
                     "admin": {
@@ -231,6 +295,7 @@ class NewAirHandler(SimpleHTTPRequestHandler):
                         "global_name": user.get("global_name"),
                         "avatar": user.get("avatar"),
                         "roles": member.get("roles", []),
+                        "grade": grade,
                     },
                 }
                 cookie_header = f"{SESSION_COOKIE}={session_id}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400"
