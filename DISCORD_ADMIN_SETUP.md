@@ -1,44 +1,34 @@
-# Lier le panel admin aux rôles Discord
+# Rôles Discord pour le panel admin NewAir
 
-Le panel `/admin/` est protégé par Discord OAuth. Seuls les comptes Discord qui possèdent un rôle autorisé sur ton serveur peuvent entrer.
+Le panel `/admin/` vérifie les rôles Discord avant de laisser entrer un membre.
 
-## Variables à mettre sur Render
+## Staff, SuperAdmin, Fondateur
 
-Dans Render > ton service > Environment, ajoute :
+Le site utilise la variable Render `DISCORD_ADMIN_ROLE_IDS`. Mets dedans tous les rôles qui ont le droit d’ouvrir le panel :
 
 ```env
-PUBLIC_BASE_URL=https://newair-site.onrender.com
-DISCORD_CLIENT_ID=ID_DE_TON_APPLICATION_DISCORD
-DISCORD_CLIENT_SECRET=SECRET_DE_TON_APPLICATION_DISCORD
-DISCORD_BOT_TOKEN=TOKEN_DU_BOT_DISCORD
-DISCORD_GUILD_ID=ID_DE_TON_SERVEUR_DISCORD
-DISCORD_ADMIN_ROLE_IDS=ID_ROLE_ADMIN,ID_ROLE_FONDATEUR
+DISCORD_ADMIN_ROLE_IDS=ID_ROLE_STAFF,ID_ROLE_SUPERADMIN,ID_ROLE_FONDATEUR
 ```
 
-Tu peux mettre plusieurs rôles dans `DISCORD_ADMIN_ROLE_IDS`, séparés par des virgules.
+Les IDs doivent être séparés par des virgules.
 
-## Dans le portail Discord Developer
+## Personne la plus haut gradée
 
-1. Ouvre ton application Discord.
-2. Va dans OAuth2.
-3. Ajoute cette Redirect URI :
+Pour donner les mêmes permissions que Fondateur à une seule personne, crée un rôle Discord spécial, par exemple :
 
 ```txt
-https://newair-site.onrender.com/api/discord/callback
+Haut Gradé Panel
 ```
 
-4. Va dans Bot et copie le token pour `DISCORD_BOT_TOKEN`.
-5. Invite le bot dans ton serveur Discord.
+Donne ce rôle uniquement à cette personne, puis ajoute l’ID du rôle dans `DISCORD_ADMIN_ROLE_IDS` :
 
-## Récupérer les IDs Discord
+```env
+DISCORD_ADMIN_ROLE_IDS=ID_ROLE_STAFF,ID_ROLE_SUPERADMIN,ID_ROLE_FONDATEUR,ID_ROLE_HAUT_GRADE_PANEL
+```
 
-Dans Discord :
+C’est plus propre et plus sûr que d’utiliser directement un ID utilisateur.
 
-1. Active le mode développeur.
-2. Clic droit sur ton serveur > Copier l’identifiant = `DISCORD_GUILD_ID`.
-3. Clic droit sur le rôle admin > Copier l’identifiant = `DISCORD_ADMIN_ROLE_IDS`.
-
-## Après modification
+## Après changement
 
 Sur Render, fais :
 
