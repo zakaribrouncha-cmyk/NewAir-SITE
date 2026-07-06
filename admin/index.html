@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="fr">
 <head>
   <meta charset="utf-8">
@@ -31,20 +31,29 @@
     const ADMIN_EMAIL="admin@newair.fr";
     const ADMIN_PASS="newairadmin";
     const app=document.getElementById("app");
-    const read=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch{return[]}};
-    const write=v=>localStorage.setItem(KEY,JSON.stringify(v));
+    const readLocal=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch{return[]}};
+    const writeLocal=v=>localStorage.setItem(KEY,JSON.stringify(v));
+    let cache=[];
+    async function read(){
+      try{
+        const r=await fetch("/api/candidatures",{cache:"no-store"});
+        if(r.ok){const j=await r.json();cache=Array.isArray(j.rows)?j.rows:[];return cache}
+      }catch{}
+      cache=readLocal();
+      return cache;
+    }
+    async function write(v){writeLocal(v);cache=v}
     let selected=null;
     function login(){
       app.innerHTML=`<section class="card" style="max-width:430px;margin:12vh auto">
         <img src="/assets/newair-logo-swirl.png" alt="NewAir" style="height:70px;margin:0 auto 22px">
         <h1 style="font-size:34px;letter-spacing:.12em;margin:0 0 8px">ADMIN NewAir</h1>
-        <p class="muted">Connexion locale pour gÃ©rer les candidatures whitelist.</p>
+        <p class="muted">Connexion locale pour gérer les candidatures whitelist.</p>
         <form id="loginForm">
-          <input id="email" type="email" placeholder="admin@newair.fr" required>
+          <input id="email" type="email" placeholder="Email admin" required>
           <input id="pass" type="password" placeholder="Mot de passe" required>
           <button class="btn" style="width:100%;margin-top:8px">Connexion</button>
         </form>
-        <p class="muted" style="font-size:12px;margin-top:16px">Compte: admin@newair.fr / newairadmin</p>
         <a class="muted" href="/" style="display:block;text-align:center;margin-top:18px">Retour au site</a>
       </section>`;
       document.getElementById("loginForm").onsubmit=e=>{
@@ -53,20 +62,23 @@
         else alert("Identifiants invalides");
       };
     }
-    function setStatus(id,status){
-      const rows=read();
+    async function setStatus(id,status){
+      const rows=await read();
       const row=rows.find(x=>x.id===id);
-      if(row){row.status=status;row.reviewed_at=new Date().toISOString();write(rows)}
+      if(row){
+        row.status=status;row.reviewed_at=new Date().toISOString();await write(rows);
+        try{await fetch("/api/candidatures/status",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,status})})}catch{}
+      }
       render(id);
     }
-    function render(id=selected){
+    async function render(id=selected){
       if(sessionStorage.getItem("newair-admin")!=="1") return login();
-      const rows=read();
+      const rows=await read();
       selected=id||rows[0]?.id||null;
       const row=rows.find(x=>x.id===selected);
       app.innerHTML=`<header style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:22px">
         <div><div class="label">Panneau staff local</div><h1 style="font-size:42px;letter-spacing:.1em;margin:0">WHITELIST NewAir</h1><p class="muted">${rows.length} candidature(s)</p></div>
-        <div style="display:flex;gap:10px"><button class="btn ghost" id="exportBtn">Export JSON</button><button class="btn red" id="logoutBtn">DÃ©connexion</button></div>
+        <div style="display:flex;gap:10px"><button class="btn ghost" id="exportBtn">Export JSON</button><button class="btn red" id="logoutBtn">Déconnexion</button></div>
       </header>
       <section class="row">
         <aside class="list">${rows.length?rows.map(x=>`<button class="item ${x.id===selected?"active":""}" data-id="${x.id}">
@@ -74,7 +86,7 @@
           <span class="muted">${x.discord_tag||"Discord vide"} - ${new Date(x.created_at).toLocaleString("fr-FR")}</span><br>
           <span style="color:${x.status==="accepted"?"#86efac":x.status==="rejected"?"#fca5a5":"#fde68a"}">${x.status||"pending"}</span>
         </button>`).join(""):`<div class="card muted">Aucune candidature pour l'instant.</div>`}</aside>
-        <article class="card">${row?details(row):`<p class="muted">SÃ©lectionne une candidature.</p>`}</article>
+        <article class="card">${row?details(row):`<p class="muted">Sélectionne une candidature.</p>`}</article>
       </section>`;
       document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>render(b.dataset.id));
       document.getElementById("logoutBtn").onclick=()=>{sessionStorage.removeItem("newair-admin");login()};
@@ -83,18 +95,17 @@
     }
     function details(x){
       return `<div style="display:flex;align-items:start;justify-content:space-between;gap:14px">
-        <div><div class="label">Candidat</div><h2 style="font-size:28px;margin:0">${x.rp_firstname||""} ${x.rp_lastname||""}</h2><p class="muted">${x.email||"email non renseignÃ©"} - ${x.age||"?"} ans</p></div>
+        <div><div class="label">Candidat</div><h2 style="font-size:28px;margin:0">${x.rp_firstname||""} ${x.rp_lastname||""}</h2><p class="muted">${x.email||"email non renseigné"} - ${x.age||"?"} ans</p></div>
         <div style="display:flex;gap:8px"><button class="btn" data-status="accepted">Accepter</button><button class="btn red" data-status="rejected">Refuser</button></div>
       </div>
-      ${field("Discord",x.discord_tag)}${field("Heures GTA RP",x.hours_gtarp||"Non renseignÃ©")}
+      ${field("Discord",x.discord_tag)}${field("Heures GTA RP",x.hours_gtarp||"Non renseigné")}
       ${field("Projet RP",x.rp_project)}${field("Background",x.rp_background)}${field("Motivations",x.motivation)}
       <div class="label">Signature</div>${x.signature?`<img src="${x.signature}" style="max-width:360px;background:#fff;border-radius:8px;padding:8px">`:"<p class='muted'>Aucune signature.</p>"}`;
     }
-    function field(label,value){return `<div class="label">${label}</div><pre>${String(value||"Non renseignÃ©").replace(/[<>&]/g,m=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[m]))}</pre>`}
+    function field(label,value){return `<div class="label">${label}</div><pre>${String(value||"Non renseigné").replace(/[<>&]/g,m=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[m]))}</pre>`}
     render();
   </script>
 <script defer src="/assets/newair-custom.js?v=night5" data-local-custom="newair"></script></body>
 </html>
-
 
 
