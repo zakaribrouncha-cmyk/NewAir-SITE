@@ -1,0 +1,26 @@
+{
+  "updated_at": "auto",
+  "members": [
+    {
+      "name": "Fondateur NewAir",
+      "role": "Fondateur",
+      "discord_id": "",
+      "avatar": "",
+      "subtitle": "Direction du serveur"
+    },
+    {
+      "name": "SuperAdmin NewAir",
+      "role": "SuperAdmin",
+      "discord_id": "",
+      "avatar": "",
+      "subtitle": "Gestion staff et serveur"
+    },
+    {
+      "name": "Staff NewAir",
+      "role": "Staff",
+      "discord_id": "",
+      "avatar": "",
+      "subtitle": "Support et modération"
+    }
+  ]
+}
