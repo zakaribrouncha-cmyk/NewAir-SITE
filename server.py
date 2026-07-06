@@ -1,22 +1,19 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from http import cookies
-import json
-import os
-import secrets
-import time
+import json, os, secrets, time
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parent
-DATA_DIR = ROOT / "data"
-DATA_FILE = DATA_DIR / "candidatures.json"
-USERS_FILE = DATA_DIR / "users.json"
-OAUTH_STATES = {}
-ADMIN_SESSIONS = {}
-USER_SESSIONS = {}
+DATA = ROOT / "data"
+CANDIDATURES = DATA / "candidatures.json"
+USERS = DATA / "users.json"
 ADMIN_COOKIE = "newair_admin_session"
 USER_COOKIE = "newair_user_session"
+ADMIN_SESSIONS = {}
+USER_SESSIONS = {}
+OAUTH_STATES = {}
 ACCEPTED_ROLE_ID = os.environ.get("DISCORD_ACCEPTED_ROLE_ID", "1523767412103708762").strip()
 REFUSED_ROLE_ID = os.environ.get("DISCORD_REFUSED_ROLE_ID", "1523768172291948674").strip()
 
@@ -28,210 +25,179 @@ def read_json(path, default):
         return default
 
 
-def write_json(path, payload):
-    DATA_DIR.mkdir(exist_ok=True)
-    path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-
-
-def read_rows():
-    return read_json(DATA_FILE, [])
-
-
-def write_rows(rows):
-    write_json(DATA_FILE, rows)
-
-
-def read_users():
-    return read_json(USERS_FILE, [])
-
-
-def write_users(users):
-    write_json(USERS_FILE, users)
+def write_json(path, value):
+    DATA.mkdir(exist_ok=True)
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
 def env_list(name):
-    return [item.strip() for item in os.environ.get(name, "").split(",") if item.strip()]
+    return [x.strip() for x in os.environ.get(name, "").split(",") if x.strip()]
 
 
-def public_base_url():
-    return os.environ.get("PUBLIC_BASE_URL") or os.environ.get("RENDER_EXTERNAL_URL") or "http://localhost:4174"
+def base_url():
+    return (os.environ.get("PUBLIC_BASE_URL") or os.environ.get("RENDER_EXTERNAL_URL") or "http://localhost:4174").rstrip("/")
 
 
-def discord_config():
-    redirect_uri = os.environ.get("DISCORD_REDIRECT_URI") or f"{public_base_url().rstrip('/')}/api/discord/callback"
-    all_roles = []
-    all_roles += env_list("DISCORD_ADMIN_ROLE_IDS")
-    all_roles += env_list("DISCORD_STAFF_ROLE_IDS")
-    all_roles += env_list("DISCORD_SUPERADMIN_ROLE_IDS")
-    all_roles += env_list("DISCORD_FONDATEUR_ROLE_IDS")
-    all_roles += env_list("DISCORD_HAUT_GRADE_PANEL_ROLE_IDS")
+def cfg():
+    staff = env_list("DISCORD_STAFF_ROLE_IDS")
+    superadmin = env_list("DISCORD_SUPERADMIN_ROLE_IDS")
+    fondateur = env_list("DISCORD_FONDATEUR_ROLE_IDS")
+    haut = env_list("DISCORD_HAUT_GRADE_PANEL_ROLE_IDS")
+    admin = env_list("DISCORD_ADMIN_ROLE_IDS")
     return {
         "client_id": os.environ.get("DISCORD_CLIENT_ID", "").strip(),
         "client_secret": os.environ.get("DISCORD_CLIENT_SECRET", "").strip(),
         "bot_token": os.environ.get("DISCORD_BOT_TOKEN", "").strip(),
         "guild_id": os.environ.get("DISCORD_GUILD_ID", "").strip(),
-        "role_ids": all_roles,
-        "staff_roles": env_list("DISCORD_STAFF_ROLE_IDS"),
-        "superadmin_roles": env_list("DISCORD_SUPERADMIN_ROLE_IDS"),
-        "fondateur_roles": env_list("DISCORD_FONDATEUR_ROLE_IDS"),
-        "haut_grade_panel_roles": env_list("DISCORD_HAUT_GRADE_PANEL_ROLE_IDS"),
-        "redirect_uri": redirect_uri,
+        "redirect_uri": os.environ.get("DISCORD_REDIRECT_URI") or base_url() + "/api/discord/callback",
+        "staff": staff,
+        "superadmin": superadmin,
+        "fondateur": fondateur,
+        "haut": haut,
+        "admin": admin,
+        "all_admin_roles": admin + staff + superadmin + fondateur + haut,
     }
 
 
-def discord_ready(require_admin_roles=False):
-    cfg = discord_config()
-    base = all([cfg["client_id"], cfg["client_secret"], cfg["bot_token"], cfg["guild_id"]])
-    return bool(base and (cfg["role_ids"] or not require_admin_roles))
+def ready(need_roles=False):
+    c = cfg()
+    base = c["client_id"] and c["client_secret"] and c["bot_token"] and c["guild_id"]
+    return bool(base and (c["all_admin_roles"] or not need_roles))
 
 
-def discord_request(url, headers=None, data=None, method=None):
-    request = Request(url, headers=headers or {}, data=data, method=method)
-    with urlopen(request, timeout=12) as response:
-        raw = response.read().decode("utf-8")
+def api(url, headers=None, data=None, method=None):
+    req = Request(url, headers=headers or {}, data=data, method=method)
+    with urlopen(req, timeout=12) as res:
+        raw = res.read().decode("utf-8")
         return json.loads(raw) if raw else {}
 
 
-def exchange_discord_code(code):
-    cfg = discord_config()
-    body = urlencode({
-        "client_id": cfg["client_id"],
-        "client_secret": cfg["client_secret"],
-        "grant_type": "authorization_code",
-        "code": code,
-        "redirect_uri": cfg["redirect_uri"],
-    }).encode("utf-8")
-    return discord_request("https://discord.com/api/oauth2/token", {"Content-Type": "application/x-www-form-urlencoded"}, body)
+def avatar(user):
+    a = user.get("avatar")
+    if not a:
+        return "/assets/newair-logo-swirl.png"
+    ext = "gif" if a.startswith("a_") else "png"
+    return f"https://cdn.discordapp.com/avatars/{user.get('id')}/{a}.{ext}?size=256"
 
 
-def get_discord_user(access_token):
-    return discord_request("https://discord.com/api/users/@me", {"Authorization": f"Bearer {access_token}"})
-
-
-def get_discord_member(user_id):
-    cfg = discord_config()
-    return discord_request(f"https://discord.com/api/guilds/{cfg['guild_id']}/members/{user_id}", {"Authorization": f"Bot {cfg['bot_token']}"})
-
-
-def discord_avatar(user):
-    avatar = user.get("avatar")
-    if not avatar:
-        return ""
-    ext = "gif" if avatar.startswith("a_") else "png"
-    return f"https://cdn.discordapp.com/avatars/{user.get('id')}/{avatar}.{ext}?size=256"
-
-
-def member_grade(roles):
-    cfg = discord_config()
+def grade_from_roles(roles):
+    c = cfg()
     roles = set(roles or [])
-    if roles.intersection(set(cfg["haut_grade_panel_roles"])):
+    if roles.intersection(set(c["haut"])) or roles.intersection(set(c["fondateur"])):
         return "Fondateur"
-    if roles.intersection(set(cfg["fondateur_roles"])):
-        return "Fondateur"
-    if roles.intersection(set(cfg["superadmin_roles"])):
+    if roles.intersection(set(c["superadmin"])):
         return "SuperAdmin"
-    if roles.intersection(set(cfg["staff_roles"])):
+    if roles.intersection(set(c["staff"])):
         return "Staff"
-    if roles.intersection(set(env_list("DISCORD_ADMIN_ROLE_IDS"))):
+    if roles.intersection(set(c["admin"])):
         return "Admin"
     return None
 
 
-def member_has_admin_role(member):
-    roles = set(member.get("roles") or [])
-    return bool(roles.intersection(set(discord_config()["role_ids"])))
+def exchange_code(code):
+    c = cfg()
+    body = urlencode({
+        "client_id": c["client_id"],
+        "client_secret": c["client_secret"],
+        "grant_type": "authorization_code",
+        "code": code,
+        "redirect_uri": c["redirect_uri"],
+    }).encode()
+    return api("https://discord.com/api/oauth2/token", {"Content-Type": "application/x-www-form-urlencoded"}, body)
+
+
+def discord_user(access_token):
+    return api("https://discord.com/api/users/@me", {"Authorization": "Bearer " + access_token})
+
+
+def discord_member(user_id):
+    c = cfg()
+    return api(f"https://discord.com/api/guilds/{c['guild_id']}/members/{user_id}", {"Authorization": "Bot " + c["bot_token"]})
 
 
 def upsert_user(user):
-    users = read_users()
+    rows = read_json(USERS, [])
     now = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-    item = next((u for u in users if u.get("discord_id") == user.get("id")), None)
-    payload = {
+    item = next((x for x in rows if x.get("discord_id") == user.get("id")), None)
+    data = {
         "discord_id": user.get("id"),
         "username": user.get("username"),
-        "global_name": user.get("global_name"),
-        "avatar": discord_avatar(user),
+        "global_name": user.get("global_name") or user.get("username"),
+        "avatar": avatar(user),
         "status": item.get("status", "linked") if item else "linked",
         "linked_at": item.get("linked_at", now) if item else now,
         "last_login": now,
     }
     if item:
-        item.update(payload)
+        item.update(data)
     else:
-        users.insert(0, payload)
-        item = payload
-    write_users(users)
+        rows.insert(0, data)
+        item = data
+    write_json(USERS, rows)
     return item
 
 
-def set_user_status(discord_id, status):
-    users = read_users()
-    item = next((u for u in users if u.get("discord_id") == discord_id), None)
+def put_role(discord_id, role_id, method):
+    if not discord_id or not role_id:
+        return False
+    c = cfg()
+    try:
+        api(f"https://discord.com/api/guilds/{c['guild_id']}/members/{discord_id}/roles/{role_id}", {"Authorization": "Bot " + c["bot_token"]}, data=b"" if method == "PUT" else None, method=method)
+        return True
+    except Exception as e:
+        print("role error", e)
+        return False
+
+
+def set_status(discord_id, status):
+    rows = read_json(USERS, [])
+    item = next((x for x in rows if x.get("discord_id") == discord_id), None)
     if item:
         item["status"] = status
         item["reviewed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
-        write_users(users)
-    apply_whitelist_role(discord_id, status)
+        write_json(USERS, rows)
+    if status == "accepted":
+        put_role(discord_id, REFUSED_ROLE_ID, "DELETE")
+        put_role(discord_id, ACCEPTED_ROLE_ID, "PUT")
+    if status == "rejected":
+        put_role(discord_id, ACCEPTED_ROLE_ID, "DELETE")
+        put_role(discord_id, REFUSED_ROLE_ID, "PUT")
     return item
 
 
-def bot_role(discord_id, role_id, method):
-    if not discord_id or not role_id:
-        return False
-    cfg = discord_config()
-    try:
-        discord_request(
-            f"https://discord.com/api/guilds/{cfg['guild_id']}/members/{discord_id}/roles/{role_id}",
-            {"Authorization": f"Bot {cfg['bot_token']}"},
-            data=b"" if method == "PUT" else None,
-            method=method,
-        )
-        return True
-    except Exception as exc:
-        print("Discord role error:", exc)
-        return False
+def esc(v):
+    return str(v or "").replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace('"', "&quot;")
 
 
-def apply_whitelist_role(discord_id, status):
-    if status == "accepted":
-        bot_role(discord_id, REFUSED_ROLE_ID, "DELETE")
-        return bot_role(discord_id, ACCEPTED_ROLE_ID, "PUT")
-    if status == "rejected":
-        bot_role(discord_id, ACCEPTED_ROLE_ID, "DELETE")
-        return bot_role(discord_id, REFUSED_ROLE_ID, "PUT")
-    return False
+def account_html(user):
+    name = user.get("global_name") or user.get("username") or "Compte"
+    av = user.get("avatar") or "/assets/newair-logo-swirl.png"
+    status = user.get("status") or "linked"
+    return f"""<!doctype html><html lang='fr'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Compte NewAir</title><link rel='stylesheet' href='/assets/styles-Db9UqP69.css'><style>body{{margin:0;background:#000;color:#fff;font-family:Arial,Helvetica,sans-serif}}.nav{{height:80px;display:flex;align-items:center;justify-content:center;gap:30px;background:rgba(0,0,0,.72);border-bottom:1px solid rgba(255,255,255,.08)}}.nav a,.pill{{color:#fff;text-decoration:none;font-size:12px;letter-spacing:.22em;text-transform:uppercase}}.pill{{display:flex;align-items:center;gap:8px;border:1px solid rgba(95,150,214,.55);border-radius:999px;padding:7px 12px;letter-spacing:.08em}}.pill img{{width:28px;height:28px;border-radius:999px;object-fit:cover}}.wrap{{max-width:1000px;margin:0 auto;padding:90px 22px}}.k{{font-size:11px;letter-spacing:.4em;color:#9fc3ef;text-transform:uppercase}}h1{{font-family:Impact,Arial Black,sans-serif;font-size:70px;letter-spacing:.06em;margin:18px 0}}.card{{border:1px solid rgba(95,150,214,.3);background:rgba(5,10,20,.88);border-radius:18px;padding:30px}}.profile{{display:flex;align-items:center;gap:18px}}.avatar{{width:82px;height:82px;border-radius:999px;object-fit:cover;border:1px solid rgba(95,150,214,.6)}}.muted{{color:rgba(255,255,255,.58)}}.btn{{display:inline-flex;margin-top:22px;margin-right:10px;padding:12px 16px;border:1px solid rgba(95,150,214,.65);border-radius:9px;color:white;text-decoration:none;text-transform:uppercase;letter-spacing:.18em;font-weight:900;font-size:12px;background:#0b2a5b}}</style></head><body><nav class='nav'><a href='/'>Accueil</a><a href='/equipe/'>Équipe</a><a href='/whitelist'>Whitelist</a><a href='/compte'>Compte</a><span class='pill'><img src='{esc(av)}' alt=''>{esc(name)}</span></nav><main class='wrap'><div class='k'>Espace joueur</div><h1>MON COMPTE</h1><section class='card'><div class='profile'><img class='avatar' src='{esc(av)}' alt=''><div><h2>{esc(name)}</h2><p class='muted'>@{esc(user.get('username'))} · ID {esc(user.get('discord_id'))}</p><p>Statut candidature : <b>{esc(status)}</b></p></div></div><a class='btn' href='/whitelist'>Faire ma whitelist</a><a class='btn' href='/api/discord/logout'>Déconnexion</a></section></main></body></html>"""
 
 
-def discord_team():
-    cfg = discord_config()
-    if not cfg["bot_token"] or not cfg["guild_id"]:
+def team_data():
+    c = cfg()
+    if not c["bot_token"] or not c["guild_id"]:
         return {"members": []}
     try:
-        data = discord_request(f"https://discord.com/api/guilds/{cfg['guild_id']}/members?limit=1000", {"Authorization": f"Bot {cfg['bot_token']}"})
+        data = api(f"https://discord.com/api/guilds/{c['guild_id']}/members?limit=1000", {"Authorization": "Bot " + c["bot_token"]})
         members = []
-        for item in data:
-            grade = member_grade(item.get("roles", []))
+        for m in data:
+            grade = grade_from_roles(m.get("roles", []))
             if not grade:
                 continue
-            user = item.get("user", {})
-            name = item.get("nick") or user.get("global_name") or user.get("username") or "Staff NewAir"
-            members.append({"name": name, "role": grade, "discord_id": user.get("id", ""), "avatar": discord_avatar(user), "subtitle": f"Rôle Discord : {grade}"})
+            u = m.get("user", {})
+            name = m.get("nick") or u.get("global_name") or u.get("username") or "Staff NewAir"
+            members.append({"name": name, "role": grade, "discord_id": u.get("id"), "avatar": avatar(u), "subtitle": "Rôle Discord : " + grade})
         return {"members": members}
-    except Exception as exc:
-        print("Discord team error:", exc)
+    except Exception as e:
+        print("team error", e)
         return {"members": []}
 
 
-def cleanup_sessions():
-    now = time.time()
-    for store in (ADMIN_SESSIONS, USER_SESSIONS, OAUTH_STATES):
-        for key in list(store.keys()):
-            if store[key].get("expires", 0) < now:
-                store.pop(key, None)
-
-
-class NewAirHandler(SimpleHTTPRequestHandler):
-    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".js": "application/javascript; charset=utf-8", ".mjs": "application/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8", ".svg": "image/svg+xml", ".webp": "image/webp", ".mp4": "video/mp4"}
+class Handler(SimpleHTTPRequestHandler):
+    extensions_map = {**SimpleHTTPRequestHandler.extensions_map, ".js": "application/javascript; charset=utf-8", ".css": "text/css; charset=utf-8", ".json": "application/json; charset=utf-8", ".mp4": "video/mp4", ".webp": "image/webp", ".svg": "image/svg+xml"}
 
     def end_headers(self):
         self.send_header("Access-Control-Allow-Origin", "*")
@@ -239,26 +205,30 @@ class NewAirHandler(SimpleHTTPRequestHandler):
         self.send_header("Access-Control-Allow-Headers", "content-type, authorization")
         super().end_headers()
 
-    def do_OPTIONS(self):
-        self.send_response(204)
-        self.end_headers()
-
-    def send_json(self, payload, status=200):
-        body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    def send_json(self, value, status=200):
+        body = json.dumps(value, ensure_ascii=False).encode()
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
         self.end_headers()
         self.wfile.write(body)
 
-    def redirect(self, location, cookie_header=None):
+    def send_html(self, html, status=200):
+        body = html.encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
+    def redirect(self, loc, cookie=None):
         self.send_response(302)
-        self.send_header("Location", location)
-        if cookie_header:
-            self.send_header("Set-Cookie", cookie_header)
+        self.send_header("Location", loc)
+        if cookie:
+            self.send_header("Set-Cookie", cookie)
         self.end_headers()
 
-    def read_cookie(self, name):
+    def cookie(self, name):
         jar = cookies.SimpleCookie()
         try:
             jar.load(self.headers.get("Cookie", ""))
@@ -267,109 +237,90 @@ class NewAirHandler(SimpleHTTPRequestHandler):
             return None
 
     def current_admin(self):
-        cleanup_sessions()
-        sid = self.read_cookie(ADMIN_COOKIE)
-        session = ADMIN_SESSIONS.get(sid or "")
-        return session if session and session.get("expires", 0) > time.time() else None
+        sid = self.cookie(ADMIN_COOKIE)
+        s = ADMIN_SESSIONS.get(sid or "")
+        return s if s and s.get("expires", 0) > time.time() else None
 
     def current_user(self):
-        cleanup_sessions()
-        sid = self.read_cookie(USER_COOKIE)
-        session = USER_SESSIONS.get(sid or "")
-        return session if session and session.get("expires", 0) > time.time() else None
-
-    def require_admin(self):
-        session = self.current_admin()
-        if session:
-            return session
-        self.send_json({"ok": False, "error": "Connexion Discord admin requise"}, 401)
-        return None
+        sid = self.cookie(USER_COOKIE)
+        s = USER_SESSIONS.get(sid or "")
+        return s if s and s.get("expires", 0) > time.time() else None
 
     def body_json(self):
-        length = int(self.headers.get("content-length", "0") or "0")
-        raw = self.rfile.read(length).decode("utf-8", errors="replace") if length else "{}"
+        raw = self.rfile.read(int(self.headers.get("content-length", "0") or "0")).decode("utf-8", "replace")
         try:
             return json.loads(raw) if raw.strip() else {}
-        except json.JSONDecodeError:
-            return {"raw": raw}
+        except Exception:
+            return {}
 
     def do_GET(self):
         parsed = urlparse(self.path)
         path = parsed.path
-        query = parse_qs(parsed.query)
-
+        q = parse_qs(parsed.query)
+        if path in ("/login", "/login/"):
+            return self.redirect("/api/discord/login?mode=user&next=/compte")
+        if path in ("/compte", "/compte/"):
+            s = self.current_user()
+            return self.send_html(account_html(s["user"])) if s else self.redirect("/login")
         if path == "/api/team":
-            return self.send_json(discord_team())
-
+            return self.send_json(team_data())
         if path == "/api/user/me":
-            user = self.current_user()
-            if not user:
-                return self.send_json({"ok": False, "error": "Non connecté"}, 401)
-            return self.send_json({"ok": True, "user": user["user"]})
-
+            s = self.current_user()
+            return self.send_json({"ok": True, "user": s["user"]}) if s else self.send_json({"ok": False}, 401)
         if path == "/api/users":
-            if not self.require_admin():
-                return
-            return self.send_json({"ok": True, "users": read_users()})
-
+            if not self.current_admin():
+                return self.send_json({"ok": False}, 401)
+            return self.send_json({"ok": True, "users": read_json(USERS, [])})
         if path == "/api/admin/me":
-            session = self.current_admin()
-            if not session:
-                return self.send_json({"ok": False, "configured": discord_ready(True), "error": "Non connecté à Discord ou rôle admin manquant"}, 401)
-            return self.send_json({"ok": True, "admin": session["admin"]})
-
+            s = self.current_admin()
+            return self.send_json({"ok": True, "admin": s["admin"]}) if s else self.send_json({"ok": False, "configured": ready(True)}, 401)
         if path == "/api/discord/login":
-            mode = (query.get("mode") or ["user"])[0]
-            if not discord_ready(mode == "admin"):
-                return self.send_json({"ok": False, "error": "Configuration Discord manquante sur Render"}, 500)
+            mode = (q.get("mode") or ["user"])[0]
+            if not ready(mode == "admin"):
+                return self.send_json({"ok": False, "error": "ENV Discord manquant sur Render"}, 500)
             state = secrets.token_urlsafe(24)
-            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": (query.get("next") or ["/compte"])[0]}
-            cfg = discord_config()
-            auth_url = "https://discord.com/oauth2/authorize?" + urlencode({"client_id": cfg["client_id"], "redirect_uri": cfg["redirect_uri"], "response_type": "code", "scope": "identify", "state": state})
-            return self.redirect(auth_url)
-
+            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": (q.get("next") or (["/admin/"] if mode == "admin" else ["/compte"]))[0]}
+            c = cfg()
+            url = "https://discord.com/oauth2/authorize?" + urlencode({"client_id": c["client_id"], "redirect_uri": c["redirect_uri"], "response_type": "code", "scope": "identify", "state": state})
+            return self.redirect(url)
         if path == "/api/discord/callback":
-            state = (query.get("state") or [""])[0]
-            code = (query.get("code") or [""])[0]
+            state = (q.get("state") or [""])[0]
+            code = (q.get("code") or [""])[0]
             saved = OAUTH_STATES.pop(state, None)
-            if not code or not saved or saved.get("expires", 0) < time.time():
-                return self.redirect("/login?error=discord_state")
+            if not code or not saved:
+                return self.redirect("/login")
             try:
-                token = exchange_discord_code(code)
-                user = get_discord_user(token["access_token"])
-                item = upsert_user(user)
+                token = exchange_code(code)
+                u = discord_user(token["access_token"])
+                item = upsert_user(u)
                 if saved.get("mode") == "admin":
-                    member = get_discord_member(user["id"])
-                    if not member_has_admin_role(member):
+                    member = discord_member(u["id"])
+                    grade = grade_from_roles(member.get("roles", []))
+                    if not grade:
                         return self.redirect("/admin/?error=role")
-                    grade = member_grade(member.get("roles", [])) or "Admin"
                     sid = secrets.token_urlsafe(32)
                     ADMIN_SESSIONS[sid] = {"expires": time.time() + 86400, "admin": {**item, "grade": grade, "roles": member.get("roles", [])}}
-                    return self.redirect("/admin/", f"{ADMIN_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400")
+                    return self.redirect(saved.get("next") or "/admin/", f"{ADMIN_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400")
                 sid = secrets.token_urlsafe(32)
                 USER_SESSIONS[sid] = {"expires": time.time() + 31536000, "user": item}
                 return self.redirect(saved.get("next") or "/compte", f"{USER_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000")
-            except Exception as exc:
-                print("Discord auth error:", exc)
-                return self.redirect("/login?error=discord")
-
+            except Exception as e:
+                print("auth error", e)
+                return self.redirect("/login")
         if path == "/api/discord/logout":
-            sid = self.read_cookie(USER_COOKIE)
+            sid = self.cookie(USER_COOKIE)
             if sid:
                 USER_SESSIONS.pop(sid, None)
-            return self.redirect("/login", f"{USER_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax")
-
+            return self.redirect("/", f"{USER_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax")
         if path == "/api/discord/admin-logout":
-            sid = self.read_cookie(ADMIN_COOKIE)
+            sid = self.cookie(ADMIN_COOKIE)
             if sid:
                 ADMIN_SESSIONS.pop(sid, None)
             return self.redirect("/admin/", f"{ADMIN_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax")
-
         if path in ("/api/candidatures", "/api/whitelist"):
-            if not self.require_admin():
-                return
-            return self.send_json({"ok": True, "rows": read_rows()})
-
+            if not self.current_admin():
+                return self.send_json({"ok": False}, 401)
+            return self.send_json({"ok": True, "rows": read_json(CANDIDATURES, [])})
         candidate = ROOT / path.lstrip("/")
         if path != "/" and not candidate.exists() and not Path(path).suffix:
             self.path = "/index.html"
@@ -377,45 +328,39 @@ class NewAirHandler(SimpleHTTPRequestHandler):
 
     def do_POST(self):
         path = urlparse(self.path).path
-        payload = self.body_json()
-
+        data = self.body_json()
         if path == "/api/users/status":
-            if not self.require_admin():
-                return
-            user = set_user_status(payload.get("discord_id"), payload.get("status"))
+            if not self.current_admin():
+                return self.send_json({"ok": False}, 401)
+            user = set_status(data.get("discord_id"), data.get("status"))
             return self.send_json({"ok": bool(user), "user": user})
-
         if path in ("/api/candidatures/status", "/api/whitelist/status"):
-            if not self.require_admin():
-                return
-            rows = read_rows()
-            row = next((r for r in rows if r.get("id") == payload.get("id")), None)
+            if not self.current_admin():
+                return self.send_json({"ok": False}, 401)
+            rows = read_json(CANDIDATURES, [])
+            row = next((x for x in rows if x.get("id") == data.get("id")), None)
             if not row:
-                return self.send_json({"ok": False, "error": "Candidature introuvable"}, 404)
-            status = payload.get("status", row.get("status", "pending"))
+                return self.send_json({"ok": False, "error": "introuvable"}, 404)
+            status = data.get("status", row.get("status", "pending"))
             row["status"] = status
             row["reviewed_at"] = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
             if row.get("discord_user_id"):
-                set_user_status(row["discord_user_id"], status)
-            write_rows(rows)
+                set_status(row["discord_user_id"], status)
+            write_json(CANDIDATURES, rows)
             return self.send_json({"ok": True, "candidature": row})
-
         user_session = self.current_user()
         user = user_session.get("user") if user_session else None
-        rows = read_rows()
-        data = payload.get("data") if isinstance(payload, dict) and isinstance(payload.get("data"), dict) else payload
-        row = {"id": f"wl_{len(rows) + 1}_{os.urandom(3).hex()}", "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "path": path, "status": "pending", **(data if isinstance(data, dict) else {"data": data})}
+        rows = read_json(CANDIDATURES, [])
+        row = {"id": f"wl_{len(rows)+1}_{os.urandom(3).hex()}", "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()), "status": "pending", **(data if isinstance(data, dict) else {})}
         if user:
             row.update({"discord_user_id": user.get("discord_id"), "discord_username": user.get("username"), "discord_name": user.get("global_name"), "discord_avatar": user.get("avatar"), "discord_tag": user.get("username")})
         rows.insert(0, row)
-        write_rows(rows)
-        return self.send_json({"ok": True, "id": row["id"], "message": "Candidature reçue"})
-
+        write_json(CANDIDATURES, rows)
+        return self.send_json({"ok": True, "id": row["id"]})
 
 if __name__ == "__main__":
     os.chdir(ROOT)
     port = int(os.environ.get("PORT", "4174"))
-    host = os.environ.get("HOST", "0.0.0.0")
-    server = ThreadingHTTPServer((host, port), NewAirHandler)
-    print(f"NewAir en ligne sur http://{host}:{port}/")
+    server = ThreadingHTTPServer(("0.0.0.0", port), Handler)
+    print(f"NewAir web service on port {port}")
     server.serve_forever()
