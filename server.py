@@ -43,6 +43,7 @@ def discord_config():
     all_roles += env_list("DISCORD_STAFF_ROLE_IDS")
     all_roles += env_list("DISCORD_SUPERADMIN_ROLE_IDS")
     all_roles += env_list("DISCORD_FONDATEUR_ROLE_IDS")
+    all_roles += env_list("DISCORD_HAUT_GRADE_PANEL_ROLE_IDS")
     return {
         "client_id": os.environ.get("DISCORD_CLIENT_ID", "").strip(),
         "client_secret": os.environ.get("DISCORD_CLIENT_SECRET", "").strip(),
@@ -52,6 +53,7 @@ def discord_config():
         "staff_roles": env_list("DISCORD_STAFF_ROLE_IDS"),
         "superadmin_roles": env_list("DISCORD_SUPERADMIN_ROLE_IDS"),
         "fondateur_roles": env_list("DISCORD_FONDATEUR_ROLE_IDS"),
+        "haut_grade_panel_roles": env_list("DISCORD_HAUT_GRADE_PANEL_ROLE_IDS"),
         "redirect_uri": redirect_uri,
     }
 
@@ -101,6 +103,8 @@ def get_discord_member(user_id):
 def member_grade(roles):
     cfg = discord_config()
     roles = set(roles or [])
+    if roles.intersection(set(cfg["haut_grade_panel_roles"])):
+        return "Fondateur"
     if roles.intersection(set(cfg["fondateur_roles"])):
         return "Fondateur"
     if roles.intersection(set(cfg["superadmin_roles"])):
@@ -257,6 +261,7 @@ class NewAirHandler(SimpleHTTPRequestHandler):
                         "DISCORD_STAFF_ROLE_IDS",
                         "DISCORD_SUPERADMIN_ROLE_IDS",
                         "DISCORD_FONDATEUR_ROLE_IDS",
+                        "DISCORD_HAUT_GRADE_PANEL_ROLE_IDS",
                     ],
                 }, 500)
             cleanup_sessions()
