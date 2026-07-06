@@ -1,0 +1,471 @@
+G-01
+Il est interdit de retourner dans votre quartier après une course-poursuite avec la police ou un groupe adverse. Fuyez dans une autre direction.
+WARN / BAN 3J
+
+G-02
+Respectez le fear naturel face aux services publics. Vous êtes des criminels, la peur d'être arrêté doit guider votre comportement en toute circonstance.
+WARN
+
+G-03
+Il est interdit de participer à des actions illégales avec un groupe sans avoir été officiellement recruté dans son CREW via le menu du jeu. Se faire passer pour un membre d'un gang sans recrutement RP est interdit.
+BAN 3J
+
+G-04
+Les plans pneus (tirer sur les pneus des véhicules poursuivants) sont autorisés seulement après un minimum de 15 minutes de course-poursuite.
+ENCADRÉ
+
+G-05
+Il est interdit de mentir sur vos blessures ou celles de vos camarades. Si vous avez été touché lors d'une fusillade, votre personnage ne peut pas prétendre être tombé d'une échelle ou mort de soif.
+BAN 3J
+
+G-06
+Les alliances entre groupes sont interdites quelque soit la forme (défense commune, partage de territoire, action conjointes).
+BAN 7J
+
+G-07
+Trasher le corps d'un joueur au sol est un motif de sanction immédiate. Tout corps doit être traité avec un minimum de cohérence RP. Insulter le corps.
+BAN 3J
+
+G-08
+Prendre l'unité X alors que des EMS ou membres du LSPD sont présents sur place est interdit. Jouez vos scènes au maximum de manière RP.
+WARN
+
+G-09
+Toute transaction ou action illégale à proximité de votre QG ou en Zone Safe est strictement interdite.
+CONFISCATION / WARN
+
+G-10
+Il n'existe aucun fear orga sur ce serveur. C'est à vous de vous imposer en RP par vos actions et votre réputation, pas par votre étiquette.
+INFO
+
+G-11
+Si vous kickez un membre de votre groupe alors qu'il détient des objets vous appartenant, aucun remboursement ne sera accordé. C'est votre responsabilité en tant que lead.
+AUCUN REMBOURSEMENT
+
+G-12
+Il est strictement interdit pour un groupe de Petite Frappe de posséder des habitants. Chaque groupe peut détenir des habitants, mais les habitants ne doivent pas participer à des activités illégales avec le groupe.
+BAN 3J
+
+G-13
+Seuls les groupes officiels sont autorisés à effectuer une descente à l'arme blanche ou à mains nues dans un quartier ou QG officiel.
+BAN 3J
+
+G-14
+La vente d'armes, de circuits illégaux et de tout autre objet doit se faire exclusivement via le DarkChat. Toute vente en dehors de ce canal est interdite.
+BAN 7J
+
+G-15
+Les mutilations permanentes (couper des membres, arracher des yeux, etc.) sont interdites sans autorisation de l'autre joueur et pas d'abus.
+BAN DÉFINITIF
+
+G-16
+Il est interdit de trahir son groupe au profit d'un groupe adverse, sauf accord explicite du staff.
+BAN 7J
+
+G-17
+Il est interdit d'avoir plus d'un personnage dans l'illégal simultanément. Un seul alter ego criminel par joueur.
+BAN DÉFINITIF
+
+G-18
+Il est interdit de partager des entrepôts en commun avec d'autres groupes dans le but de réaliser des transactions indirectes entre organisations.
+BAN 7J
+
+G-19
+Le braquage de véhicules de transport n'est autorisé que si vous avez la certitude que le véhicule appartient au groupe ciblé (plaque d'immatriculation, joueur identifié à l'intérieur, véhicule escorté par le groupe).
+BAN 3J
+
+G-21
+Fuir dans l'eau lors d'une course-poursuite expose votre personnage à des tirs à balles réelles de la part des poursuiveurs. Le risque est assumé dès l'entrée dans l'eau.
+MORT RP POSSIBLE
+
+G-22
+🗺️ Territoires - Les gangs sont exclusivement dans les zones indiquées sur la carte, en cohérence avec leur identité et leur histoire. Fréquenter un territoire ennemi sans raison RP valable expose votre personnage à du racket, des passages à tabac ou pire. L'objectif est de renforcer l'immersion et de rendre chaque quartier vivant et identifiable.
+CONSÉQUENCES RP
+
+G-23
+Nofear - En cas de nofear, le joueur se soumet à une mort RP s'il tombe dans le coma suite à cette scène.
+MORT RP
+
+🔪 Prise d'otage
+
+PO-01
+Prendre en otage un membre des services publics expose votre personnage à une peine de prison à perpétuité, voire une Mort RP. Cette action doit rester un ultime recours, jamais une habitude.
+MORT RP POSSIBLE
+
+PO-02
+Tout abus de prise d'otage sur des agents du SASP en service sera sanctionné. Cela doit constituer votre dernière option, soyez créatifs dans vos approches RP.
+SANCTION STAFF
+
+PO-03
+Il est autorisé de braquer ou d'ouvrir le feu lors d'un rendez-vous, les embuscades étant permises. Cependant, si des otages sont présents lors d'une fusillade, ils sont soumis à une Mort RP s'ils sont tués.
+MORT RP SI TUÉ
+
+PO-04
+Un otage s'expose à une Mort RP si son groupe ne se présente pas pour le récupérer, ou si l'otage ne respecte pas son fear RP.
+MORT RP
+
+PO-05
+L'utilisation de faux otages est strictement interdite.
+BAN 7J
+
+PO-06
+Il est interdit de stationner devant un QG ennemi dans l'unique but de prendre des joueurs en otage à leur sortie. Vous pouvez passer devant et tourner un peu, mais pas plus.
+BAN 3J
+
+PO-07
+Si votre groupe possède un otage adverse, il est interdit de braquer simultanément le camp ennemi. L'otage sera soumis à une Mort RP dans ce cas.
+MORT RP / BAN 3J
+
+PO-08
+Prendre en otage un joueur sans aucune raison RP valable est interdit. Toute prise d'otage doit s'inscrire dans un contexte scénarisé cohérent.
+BAN 3J
+
+PO-09
+La rançon maximale est fixée à 5 000$ par personne et 1 500$ par véhicule. Toute demande supérieure est interdite.
+WARN
+
+PO-10
+Il est interdit d'échanger un otage contre des armes blanches, armes à feu ou munitions quelle que soit la situation.
+BAN 7J
+
+PO-11
+La prise d'otage d'un médecin en service est interdite, sauf validation explicite accordée par un membre du staff.
+BAN 7J
+
+PO-12
+Il est formellement interdit de contraindre un joueur à des scènes à caractère sexuel lors d'une prise d'otage ou de toute autre interaction RP, avec ou sans arme. Toute scène humiliante ou uriner sur un joueur est strictement interdite.
+BAN DÉFINITIF
+
+🔫 Fusillades
+
+FU-01
+Ce serveur exige un RP sérieux et immersif. Déclencher une fusillade doit toujours être votre ultime recours. Soyez créatifs, proposez de belles scènes et évitez au maximum d'en arriver aux armes à feu.
+PHILOSOPHIE SERVEUR
+
+FU-02
+Il est interdit d'engager une fusillade sans avoir préalablement échangé verbalement avec le groupe adverse. Aucun tir à froid sans interaction RP.
+BAN 3J
+
+FU-03
+Il n'y a pas de limite de fusillades par soirée. Vous pouvez engager plusieurs fois dans la même soirée, tant que chaque fusillade respecte l'ensemble des règles en vigueur.
+INFO
+
+FU-04
+Il est interdit de se venger après une fusillade une fois réanimé par les EMS. La scène est clôturée à votre réveil.
+BAN 7J
+
+FU-05
+Il est interdit de prendre les hauteurs (toits, surplombs) avant que la fusillade ne soit officiellement engagée.
+WARN / BAN 3J
+
+FU-06
+Le ragdoll volontaire pendant une fusillade pour simuler une blessure tout en restant en vie est formellement interdit.
+BAN 3J
+
+FU-07
+Il est interdit de ramasser des corps en coma après une fusillade. Laisser les joueurs à terre pour les EMS.
+WARN
+
+FU-08
+Le staff se réserve le droit de sanctionner ou d'imposer une Mort RP aux joueurs régulièrement impliqués dans des gunfights à répétition.
+MORT RP POSSIBLE
+
+FU-09
+🚗 Drive-by - Le drive-by est autorisé depuis un véhicule en mouvement ou à l'arrêt. Il doit rester très bref (quelques secondes) avant de prendre la fuite.
+ENCADRÉ
+
+FU-10
+Le drive-by est autorisé sur un quartier, dans la rue, sur un trottoir ou devant un commerce. Son objectif est de revendiquer une attaque envers un groupe adverse. Les tirs peuvent être à visée létale. Le groupe ciblé a le droit de riposter s'il en a l'opportunité.
+ENCADRÉ
+
+FU-11
+Le walk-by est également autorisé, en respectant les mêmes règles que le drive-by : intervention éclair de quelques secondes maximum avant de prendre la fuite à pied.
+ENCADRÉ
+
+FU-12
+Il est formellement interdit de braquer depuis un véhicule (voiture, moto, vélo). La permission du drive-by ne vaut pas autorisation de braquage depuis un véhicule. Vous devez impérativement descendre pour braquer un joueur.
+BAN 3J
+
+🌿 Drogues
+
+DR-01
+Il est interdit de vendre de la drogue en Zone Safe, quelle que soit la quantité ou la situation.
+CONFISCATION / WARN
+
+DR-02
+Il est interdit de revendre votre propre production aux PNJ. Pour vendre aux PNJ, vous devez obligatoirement vous approvisionner auprès d'un groupe tiers.
+CONFISCATION
+
+DR-03
+Il est interdit de vendre aux PNJ depuis un véhicule (voiture, moto, quad, vélo, skateboard) et de prendre la fuite avec ce dernier après la transaction.
+WARN / BAN 3J
+
+DR-04
+Toute transaction doit être réalisée hors zone safe et à plus de 3 km de votre QG. Traiter près de votre base est interdit.
+CONFISCATION
+
+DR-05
+Il est interdit de planter ou fabriquer dans son QG, dans des intérieurs/instances, sur des toits, en montagne, ou dans tout endroit incohérent ou en Zone Safe.
+CONFISCATION / BAN 3J
+
+DR-06
+La vente aux PNJ est ouverte aux civils, petites frappes, habitants et gangs. Elle reste strictement interdite pour les organisations.
+BAN 7J
+
+DR-07
+💰 Tarifs - Des fourchettes de prix sont fixées par le serveur pour la revente. Informez-vous avant de commencer à vendre. Aucun retour en arrière ne sera accordé en cas de méconnaissance des tarifs.
+OBLIGATOIRE
+
+DR-08
+Il est interdit de faire du copinage sur les points de récolte. Chaque joueur doit accéder aux zones dans le respect des règles de territoire.
+WARN
+
+DR-09
+Les gangs ont l'interdiction de récolter les drogues appartenant aux organisations. Le respect des territoires est obligatoire.
+BAN 3J
+
+DR-10
+Vous avez l'obligation de vous rendre sur les zones de récolte avec des véhicules de transport adaptés (Speedo, Rumpo, Burrito…). Aucune récolte à pied ou en véhicule inadapté.
+CONFISCATION
+
+🚗 Véhicules
+
+VH-01
+Le vol de véhicule doit être roleplayé (crochetage, menace verbale). Voler un véhicule à l'arrêt sans RP est interdit. Véhicule PNJ autorisé.
+WARN
+
+VH-02
+Les chases de fuite doivent rester cohérentes. Pas de conduite irréaliste (murs, falaises) pour échapper à la police.
+WARN / BAN 3J
+
+VH-03
+Percuter intentionnellement un véhicule de police sans justification RP est considéré comme VDM.
+BAN 3J
+
+VH-05
+Les convois de véhicules sont strictement interdits. Il est interdit de se déplacer en groupe organisé de plusieurs véhicules à la suite.
+WARN / BAN 3J
+
+🪓 Armes et munitions
+
+AR-01
+Toute arme doit être obtenue via le laboratoire d'armes ou le marché noir RP. Les armes spawnées sans RP sont interdites.
+BAN DÉFINITIF
+
+AR-02
+La vente d'armes doit se faire en face à face, dans un lieu discret, avec un contexte RP crédible.
+WARN / BAN 3J
+
+AR-03
+Sortir une arme lourde (RPG, sniper de précision) en zone urbaine sans contexte de guerre de gang est interdit.
+BAN 7J
+
+AR-04
+Le stock d'armes sur soi est limité. Transporter un arsenal entier sans véhicule adapté est irréaliste et sanctionné.
+CONFISCATION
+
+🏦 Braquages
+
+BR-01
+🏦 Fleeca & Bijouterie - Suite à tout braquage de Fleeca ou de Bijouterie, une course poursuite est obligatoire. Vous devez attendre l'arrivée de la police. Si aucune patrouille n'est présente au bout de 15 minutes, vous êtes autorisés à partir.
+OBLIGATOIRE
+
+BR-02
+Pour un braquage de Fleeca ou Bijouterie, vous devez réunir : 2 braqueurs minimum, 2 otages minimum, 1 arme à feu minimum et un maximum de 2 véhicules (2 voitures ou 3 motos pour les MC).
+CONDITIONS OBLIGATOIRES
+
+BR-03
+Les plans mule sont autorisés pour les Fleeca/Bijouterie, mais uniquement après 10 minutes de poursuite minimum avant d'y avoir recours.
+ENCADRÉ
+
+BR-04
+Il est interdit de looter des items sur vos otages lors d'un braquage de Fleeca ou Bijouterie.
+WARN / BAN 3J
+
+BR-05
+Il est interdit de demander une rançon contre la libération des otages lors d'un braquage de Fleeca ou Bijouterie.
+WARN
+
+BR-06
+Les MC sont autorisés à réaliser l'ensemble des braquages à moto.
+AUTORISÉ
+
+BR-07
+🏪 Supérettes / Conteneurs / Cambriolages - Vous devez attendre l'arrivée de la police pour partir en course poursuite. Si aucune patrouille n'est présente après 5 minutes, vous pouvez quitter les lieux. Une par soirée par groupe.
+OBLIGATOIRE
+
+BR-08
+Pour les braquages de type Supérettes / Conteneurs / Cambriolages : il est interdit d'avoir des otages, d'utiliser des plans mules, ou de recourir à des deux-roues, skates, BMX ou véhicules de métier.
+BAN 3J
+
+R-x4dl
+Il est interdit de contre braquer. Par exemple, lors d'une scène prise d'otage suite à un convoi, les autres groupes ne peuvent pas contre braquer, ils doivent laisser la scène.
+BAN 7J
+
+🧪 Laboratoires de drogues
+
+LD-01
+📁 Attaque de laboratoire - Pour attaquer un laboratoire, le groupe doit obligatoirement soumettre un dossier complet au staff (GSlide) comportant : la position exacte du laboratoire, l'interception de deux véhicules (l'un chargé de drogues brutes, l'autre chargé de drogues transformées), ainsi qu'une photo d'un membre du groupe devant la porte du laboratoire.
+DOSSIER OBLIGATOIRE
+
+LD-02
+Toutes les informations contenues dans le dossier doivent avoir été obtenues de manière entièrement RP. Toute irrégularité constatée par le staff entraînera des sanctions immédiates.
+BAN 7J
+
+LD-03
+Il est interdit de camper le laboratoire ou ses alentours. Toute présence statique prolongée sans activité RP justifiée sera sanctionnée.
+WARN / BAN 3J
+
+LD-04
+Il est interdit de bâcher ses véhicules devant ou à l'intérieur d'un laboratoire.
+WARN
+
+LD-05
+Vous avez l'obligation de vous rendre aux laboratoires avec des véhicules de transport adaptés (Speedo, Rumpo, Burrito…). Aucun déplacement en véhicule inadapté ne sera toléré.
+CONFISCATION
+
+LD-06
+Il est interdit de posséder une propriété à moins de 3 km d'un laboratoire. La proximité immobilière avec un lab est considérée comme une tentative de contournement des règles territoriales.
+BAN 3J
+
+🏹 Laboratoire d'arme
+
+LA-01
+Les armes ne sont pas lootables, même si un joueur en possède plusieurs sur lui. Il est interdit de s'emparer physiquement des armes d'un adversaire dans le laboratoire.
+BAN 3J
+
+LA-02
+💡 Exception - Si un joueur a déjà fabriqué des armes et n'a plus d'alliage sur lui, vous êtes en droit de lui réclamer en CA$H l'équivalent du surplus d'armes qu'il possède. Exemple : il détient 1 Glock + 3 Berettas : vous pouvez exiger l'équivalent en cash de 3 armes.
+ENCADRÉ
+
+LA-03
+L'alliage en titane est considéré comme un item classique : il est donc lootable, dans la limite de 50% du stock détenu par le joueur.
+50% MAX
+
+LA-04
+Il est interdit de bâcher ses véhicules devant ou à l'intérieur du laboratoire d'armes.
+WARN
+
+🧱 Business Secondaire
+
+BS-01
+📁 Attaque de business secondaire - Pour attaquer un business secondaire, le groupe doit obligatoirement soumettre un dossier complet au staff (GSlide) comprenant : la position du business, l'interception d'un véhicule rempli d'objets liés à ce business, et une photo d'un membre du groupe devant la porte.
+DOSSIER OBLIGATOIRE
+
+BS-02
+Toutes les informations du dossier doivent avoir été obtenues de manière entièrement RP. Toute irrégularité constatée par le staff entraînera des sanctions immédiates.
+BAN 7J
+
+BS-03
+Un groupe peut posséder jusqu'à deux business secondaires, mais pas deux du même type. Il est par exemple impossible de détenir deux laboratoires de munitions ou deux laboratoires d'armes à feu simultanément.
+LIMITE OBLIGATOIRE
+
+🎒 Loot / Prises d'otages
+
+LO-01
+Le loot d'un joueur doit être roleplay (fouille verbale, menace). Looter sans interaction est interdit.
+WARN
+
+LO-02
+Il est interdit de looter un joueur à terre sans RP d'achèvement ou de soin. Profiter d'un mort de façon mécanique = grief.
+BAN 3J
+
+LO-03
+Le vol de véhicule via loot doit être accompagné d'un scénario crédible (ex : carjacking en bonne et due forme).
+WARN
+
+LO-04
+Le vol d'armes est autorisé uniquement avec une raison RP valable et solide, et sous accord préalable du staff. Toute tentative de loot d'arme sans ces deux conditions réunies est strictement interdite.
+BAN 7J
+
+R-mnrc
+Il est désormais autorisé de braquer un agent de police avec raison valable. Tout abus sera sanctionné.
+WARN
+
+💀 Mort RP / Wipe
+
+MR-01
+En cas de mort RP (validée par les deux parties ou le staff), le personnage perd la mémoire des événements qui ont conduit à sa mort.
+OBLIGATOIRE
+
+MR-02
+En rejoignant un groupe, vous acceptez que le lead du groupe peut décider de vous infliger une Mort RP à tout moment, sans avoir à justifier sa décision. C'est une condition implicite d'appartenance au groupe.
+ACCEPTÉ À L'ENTRÉE
+
+MR-03
+Un wipe de personnage annule tous les avoirs illégaux liés à l'ancien personnage. Aucun transfert vers un nouveau personnage ne sera toléré.
+BAN DÉFINITIF
+
+MR-04
+En dehors du cadre d'un groupe, la mort RP doit être validée par les deux parties ou le staff. Imposer une mort RP sans accord ni contexte légitime est considéré comme du powergaming.
+BAN 3J
+
+💣 Arnaques / Vols
+
+AV-01
+Les arnaques sont formellement interdites sur le serveur. Considérées comme inéquitables et régulièrement sources d'abus, elles ne seront tolérées sous aucune forme.
+BAN 7J
+
+AV-02
+Il est interdit de réaliser de fausses ventes impliquant des armes, du blanchiment d'argent, des biens immobiliers, de la drogue ou toute autre activité frauduleuse déguisée en transaction.
+BAN 7J
+
+AV-03
+Il est interdit de mettre en vente un véhicule à un prix injustifié. Le tarif doit être cohérent avec le prix d'achat initial et les améliorations réellement apportées.
+WARN / ANNULATION
+
+AV-04
+Le vol d'armes (blanches ou de poing) dans les coffres de véhicules est strictement interdit. Le vol en général n'est pas prohibé, mais reste sous votre entière responsabilité : faites preuve de discernement. Les armes ne sont pas lootables, sauf sous demande staff.
+BAN 3J
+
+AV-05
+Le vol de carte bancaire ainsi que son utilisation (achat ou retrait d'argent) sont formellement interdits, quelle que soit la situation.
+BAN DÉFINITIF
+
+AV-06
+Lors d'un vol dans un appartement habité laissé ouvert, il est interdit de prendre plus de 50% par item. Soyez fairplay, prenez moins si possible.
+BAN 3J
+
+AV-07
+Il est interdit de forcer un joueur à ouvrir son appartement dans le but de lui dérober des objets. L'appartement doit être accessible volontairement.
+BAN 7J
+
+AV-08
+Les vols dans les coffres de véhicules ne seront plus remboursés à l'unique exception des armes volées, qui restent interdites à la prise.
+AUCUN REMBOURSEMENT
+
+AV-09
+Quel que soit le type de vol - appartement, véhicule, joueur - il est strictement interdit de voler plus de 50% par item. Toute infraction expose à de lourdes sanctions. Le fair-play est non négociable.
+BAN 7J+
+
+🪙 Corruption
+
+CO-01
+La corruption est autorisée uniquement avec un accord préalable du staff. Toute tentative de corruption sans validation staff sera immédiatement sanctionnée, quelle que soit la situation.
+BAN 7J
+
+CO-02
+Une fois l'accord staff obtenu, la corruption doit être intégralement jouée en RP de façon cohérente et crédible. Aucune corruption ne peut être expédiée mécaniquement sans scène RP développée.
+BAN 3J
+
+CO-03
+La corruption ne peut en aucun cas servir à annuler des arrestations légitimes sans contrepartie RP sérieuse et validée (chantage documenté, menace crédible et jouée).
+BAN 7J
+
+CO-04
+Toute corruption impliquant du matériel d'État (armes de police, accès aux fichiers, véhicules officiels) nécessite obligatoirement une validation staff spécifique et préalable.
+BAN DÉFINITIF
+
+📋 Règle Logique
+
+R-01
+Il est interdit de lécher les murs dans le but de trouver des points illégaux, des récoltes, des traitements ou toute autre activité cachée. Aussi interdit de alt clic.
+24H
+
+R-t2a2
+L'illégal débute à 21h00 et se termine à 02h00 précises. Aucune exception ne sera accordée. Toute activité illégale réalisée avant 21h00 ou après 02h00 sera sanctionnée.
+24H
+
+R-a62k
+Il est interdit d'effectuer une mission d'intérim pour un groupe illégal.
+48H

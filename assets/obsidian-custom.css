@@ -1,0 +1,325 @@
+﻿:root {
+  --color-violet-100: #f7f0e5;
+  --color-violet-200: #1e4f8f;
+  --color-violet-300: #123a7a;
+  --color-violet-400: #0f376f;
+  --color-violet-500: #071a3d;
+  --color-violet-600: #06152f;
+  --color-violet-900: #030b1b;
+  --color-purple-100: #f7f0e5;
+  --color-purple-200: #1e4f8f;
+  --color-purple-300: #123a7a;
+  --color-purple-400: #0f376f;
+  --color-purple-500: #071a3d;
+  --color-purple-600: #06152f;
+  --color-purple-800: #041024;
+  --color-purple-900: #030b1b;
+  --color-purple-950: #020713;
+  --color-fuchsia-500: #0b2a5b;
+  --color-fuchsia-600: #071a3d;
+  --color-fuchsia-700: #06152f;
+}
+
+body > video {
+  filter: sepia(0.68) saturate(0.42) hue-rotate(334deg) brightness(1.08) contrast(0.98) !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at 50% 50%, rgba(11, 42, 91, 0.22), transparent 38%),
+    linear-gradient(90deg, transparent 4%, rgba(11, 42, 91, 0.16) 50%, transparent 96%);
+  mix-blend-mode: color;
+}
+
+.neon-underline {
+  text-shadow: 0 0 12px rgba(11, 42, 91, 0.75), 0 0 32px rgba(11, 42, 91, 0.38) !important;
+}
+
+.neon-underline::before {
+  background: radial-gradient(rgba(11, 42, 91, 0.75), rgba(11, 42, 91, 0.38) 30%, rgba(11, 42, 91, 0) 70%) !important;
+}
+
+.neon-underline::after {
+  background: linear-gradient(90deg, transparent, #0b2a5b 50%, transparent) !important;
+  box-shadow: 0 0 8px #0b2a5b, 0 0 18px rgba(11, 42, 91, 0.8), 0 0 36px rgba(11, 42, 91, 0.5) !important;
+}
+
+.text-violet-200,
+.text-violet-300,
+.text-purple-300 {
+  color: #1e4f8f !important;
+}
+
+.border-violet-400,
+.border-violet-400\/60,
+.border-violet-500\/40,
+.border-purple-300\/70,
+.border-purple-500\/50 {
+  border-color: rgba(11, 42, 91, 0.72) !important;
+}
+
+.bg-violet-500\/5,
+.bg-violet-500\/10,
+.bg-violet-500\/20,
+.bg-violet-500\/25,
+.bg-violet-500\/30,
+.bg-purple-500\/20 {
+  background-color: rgba(11, 42, 91, 0.16) !important;
+}
+
+.from-purple-500 {
+  --tw-gradient-from: #071a3d !important;
+}
+
+.to-violet-500,
+.to-purple-600 {
+  --tw-gradient-to: #0b2a5b !important;
+}
+
+
+/* NewAir beige overrides */
+a[href="/paiement"], a[href^="/paiement"], [href="/paiement"] { display: none !important; }
+.bg-gradient-to-r.from-amber-900\/40.to-amber-500,
+.bg-gradient-to-r.from-amber-900\/40.to-amber-500:hover,
+button.bg-gradient-to-r {
+  --tw-gradient-from: #041024 !important;
+  --tw-gradient-to: #0b2a5b !important;
+}
+.border-amber-500\/40,
+.border-amber-400\/40 {
+  border-color: rgba(11, 42, 91, 0.48) !important;
+}
+.shadow-\[0_0_80px_rgba\(217\,70\,239\,0\.25\)\] {
+  box-shadow: 0 0 80px rgba(11,42,91,0.25) !important;
+}
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background: radial-gradient(ellipse at center, rgba(11,42,91,0.2), transparent 42%);
+  mix-blend-mode: color;
+}
+
+/* Final beige neon overrides */
+:root, .dark {
+  --neon: #0b2a5b !important;
+  --neon-glow: #1e4f8f !important;
+  --rarity-epic: #0b2a5b !important;
+}
+
+[class*="bg-[var(--neon)]"] {
+  background-color: #0b2a5b !important;
+}
+
+[class*="shadow"],
+[style*="--neon"] {
+  --neon: #0b2a5b !important;
+  --neon-glow: #1e4f8f !important;
+}
+.text-fuchsia-500,
+.text-fuchsia-600,
+.text-pink-500,
+.text-pink-400 {
+  color: #0b2a5b !important;
+}
+
+.bg-fuchsia-500,
+.bg-fuchsia-600,
+.bg-pink-500,
+.bg-pink-400 {
+  background-color: #0b2a5b !important;
+}
+
+.from-fuchsia-500,
+.from-pink-500 {
+  --tw-gradient-from: #071a3d !important;
+}
+
+.to-fuchsia-500,
+.to-pink-500,
+.to-pink-400 {
+  --tw-gradient-to: #0b2a5b !important;
+}
+
+/* Force all remaining page-transition violet glows to beige */
+:root, .dark, * {
+  --color-violet-50: #fbf6ed !important;
+  --color-violet-100: #f7f0e5 !important;
+  --color-violet-200: #1e4f8f !important;
+  --color-violet-300: #123a7a !important;
+  --color-violet-400: #0f376f !important;
+  --color-violet-500: #071a3d !important;
+  --color-violet-600: #06152f !important;
+  --color-violet-700: #051126 !important;
+  --color-violet-800: #041024 !important;
+  --color-violet-900: #030b1b !important;
+  --color-purple-50: #fbf6ed !important;
+  --color-purple-100: #f7f0e5 !important;
+  --color-purple-200: #1e4f8f !important;
+  --color-purple-300: #123a7a !important;
+  --color-purple-400: #0f376f !important;
+  --color-purple-500: #071a3d !important;
+  --color-purple-600: #06152f !important;
+  --color-purple-700: #051126 !important;
+  --color-purple-800: #041024 !important;
+  --color-purple-900: #030b1b !important;
+  --color-purple-950: #020713 !important;
+  --color-fuchsia-400: #123a7a !important;
+  --color-fuchsia-500: #0b2a5b !important;
+  --color-fuchsia-600: #071a3d !important;
+  --color-fuchsia-700: #06152f !important;
+  --color-pink-400: #123a7a !important;
+  --color-pink-500: #0b2a5b !important;
+}
+
+[class*="violet"],
+[class*="purple"],
+[class*="fuchsia"],
+[class*="pink"] {
+  --tw-ring-color: rgba(11, 42, 91, 0.65) !important;
+  --tw-shadow-color: rgba(11, 42, 91, 0.65) !important;
+}
+
+[class*="text-violet"],
+[class*="text-purple"],
+[class*="text-fuchsia"],
+[class*="text-pink"] {
+  color: #0b2a5b !important;
+}
+
+[class*="border-violet"],
+[class*="border-purple"],
+[class*="border-fuchsia"],
+[class*="border-pink"] {
+  border-color: rgba(11, 42, 91, 0.72) !important;
+}
+
+[class*="bg-violet"],
+[class*="bg-purple"],
+[class*="bg-fuchsia"],
+[class*="bg-pink"] {
+  background-color: rgba(11, 42, 91, 0.18) !important;
+}
+
+[class*="from-violet"],
+[class*="from-purple"],
+[class*="from-fuchsia"],
+[class*="from-pink"] {
+  --tw-gradient-from: #071a3d !important;
+  --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from) var(--tw-gradient-from-position), var(--tw-gradient-to) var(--tw-gradient-to-position)) !important;
+}
+
+[class*="via-violet"],
+[class*="via-purple"],
+[class*="via-fuchsia"],
+[class*="via-pink"] {
+  --tw-gradient-via: #0b2a5b !important;
+}
+
+[class*="to-violet"],
+[class*="to-purple"],
+[class*="to-fuchsia"],
+[class*="to-pink"] {
+  --tw-gradient-to: #1e4f8f !important;
+}
+
+[style*="139,92,246"],
+[style*="139, 92, 246"],
+[style*="167,139,250"],
+[style*="167, 139, 250"],
+[style*="168,85,247"],
+[style*="168, 85, 247"],
+[style*="126,34,206"],
+[style*="126, 34, 206"],
+[style*="124,58,237"],
+[style*="124, 58, 237"],
+[style*="192,132,252"],
+[style*="192, 132, 252"],
+[style*="217,70,239"],
+[style*="217, 70, 239"],
+[style*="216,39,255"],
+[style*="216, 39, 255"],
+[style*="#8b5cf6"],
+[style*="#a78bfa"],
+[style*="#7c3aed"],
+[style*="#9333ea"],
+[style*="#c084fc"],
+[style*="#d946ef"] {
+  color: #0b2a5b !important;
+  border-color: rgba(11, 42, 91, 0.72) !important;
+  background: radial-gradient(circle, rgba(11, 42, 91, 0.32), transparent 62%) !important;
+  box-shadow: 0 0 34px rgba(11, 42, 91, 0.55), 0 0 90px rgba(11, 42, 91, 0.26) !important;
+}
+
+/* NewAir night-blue theme */
+:root, .dark, * {
+  --bronze: #0b2a5b !important;
+  --bronze-glow: #1e4f8f !important;
+  --accent: #0b2a5b !important;
+  --ring: #1e4f8f !important;
+  --neon: #0b2a5b !important;
+  --neon-glow: #2f67b1 !important;
+  --rarity-epic: #0b2a5b !important;
+}
+
+.text-bronze,
+.hover\:text-bronze:hover,
+.text-amber-200,
+.text-amber-300,
+.text-amber-400,
+.hover\:text-amber-200:hover,
+.hover\:text-amber-300:hover {
+  color: #5f96d6 !important;
+}
+
+.bg-bronze,
+.bg-amber-300,
+.bg-amber-400,
+.bg-amber-500,
+.accent-amber-500 {
+  background-color: #0b2a5b !important;
+  accent-color: #1e4f8f !important;
+}
+
+.border-bronze,
+.border-bronze\/40,
+.border-amber-400\/40,
+.border-amber-500\/40,
+.hover\:border-bronze\/40:hover {
+  border-color: rgba(47, 103, 177, 0.72) !important;
+}
+
+.btn-bronze {
+  color: #d9e9ff !important;
+  border-color: rgba(47, 103, 177, 0.55) !important;
+  background: linear-gradient(135deg, rgba(4, 16, 36, 0.92), rgba(11, 42, 91, 0.88), rgba(30, 79, 143, 0.78)) !important;
+  box-shadow: 0 0 28px rgba(11, 42, 91, 0.45), inset 0 0 18px rgba(47, 103, 177, 0.18) !important;
+}
+
+.btn-bronze:hover {
+  border-color: rgba(95, 150, 214, 0.9) !important;
+  box-shadow: 0 0 34px rgba(30, 79, 143, 0.55), inset 0 0 22px rgba(95, 150, 214, 0.22) !important;
+}
+
+.from-amber-700,
+.from-amber-900\/40 {
+  --tw-gradient-from: #041024 !important;
+}
+
+.via-amber-500,
+.via-amber-600 {
+  --tw-gradient-via: #0b2a5b !important;
+}
+
+.to-amber-300,
+.to-amber-500,
+.to-amber-700 {
+  --tw-gradient-to: #1e4f8f !important;
+}
