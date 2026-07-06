@@ -3,23 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>NewAir Admin</title>
+  <title>NewAir Admin Discord</title>
   <link rel="stylesheet" href="/assets/styles-Db9UqP69.css">
-  <link rel="stylesheet" href="/assets/newair-custom.css?v=night6">
+  <link rel="stylesheet" href="/assets/newair-custom.css?v=night7">
   <style>
     body{background:#000;color:#fff;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .wrap{max-width:1180px;margin:0 auto;padding:36px 18px}
     .head{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:22px}
     .title{font-family:"Bebas Neue",Impact,sans-serif;font-size:clamp(38px,6vw,76px);line-height:.9;letter-spacing:.08em;margin:0}
-    .card,.item,.empty{border:1px solid rgba(95,150,214,.28);background:rgba(2,8,20,.82);border-radius:12px;padding:18px;box-shadow:0 0 34px rgba(11,42,91,.24)}
+    .card,.item,.empty,.login{border:1px solid rgba(95,150,214,.28);background:rgba(2,8,20,.82);border-radius:12px;padding:18px;box-shadow:0 0 34px rgba(11,42,91,.24)}
+    .login{max-width:520px;margin:11vh auto;text-align:center;padding:34px 26px}
     .grid{display:grid;grid-template-columns:minmax(240px,320px) 1fr;gap:18px}
     .list{display:flex;flex-direction:column;gap:10px;max-height:72vh;overflow:auto}
     button,a{cursor:pointer}
     .item{width:100%;text-align:left;color:#fff}
     .item:hover,.item.active{border-color:rgba(95,150,214,.85);background:rgba(11,42,91,.26)}
     .item strong,.item small,.item em{display:block}.item small,.muted,.empty{color:rgba(255,255,255,.58)}
-    .btn{border:1px solid rgba(95,150,214,.65);background:linear-gradient(135deg,#041024,#0b2a5b,#1e4f8f);color:#d9e9ff;border-radius:9px;padding:10px 14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:12px;text-decoration:none}
-    .btn.red{border-color:rgba(248,113,113,.55);background:rgba(127,29,29,.45);color:#fecaca}.btn.ghost{background:transparent;color:#9fc3ef}
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid rgba(95,150,214,.65);background:linear-gradient(135deg,#041024,#0b2a5b,#1e4f8f);color:#d9e9ff;border-radius:9px;padding:10px 14px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;font-size:12px;text-decoration:none}
+    .btn.red{border-color:rgba(248,113,113,.55);background:rgba(127,29,29,.45);color:#fecaca}.btn.ghost{background:transparent;color:#9fc3ef}.btn.discord{background:linear-gradient(135deg,#182044,#5865f2,#1e4f8f)}
     .label{font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#5f96d6;margin:16px 0 6px}
     .actionbar{display:inline-flex;align-items:center;gap:8px;flex-wrap:wrap;margin:12px 0 18px;padding:10px;border:1px solid rgba(95,150,214,.18);border-radius:10px;background:rgba(255,255,255,.03)}
     .badge{border:1px solid rgba(255,255,255,.14);border-radius:999px;padding:8px 12px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.75)}
@@ -27,26 +28,31 @@
     .badge.accepted{border-color:rgba(134,239,172,.4)}.badge.rejected{border-color:rgba(252,165,165,.4)}.badge.pending{border-color:rgba(147,197,253,.4)}
     pre{white-space:pre-wrap;font:inherit;color:rgba(255,255,255,.84);line-height:1.55;margin:0}
     .signature{max-width:360px;width:100%;background:#fff;border-radius:8px;padding:8px}
-    @media(max-width:760px){.head{display:block}.grid{grid-template-columns:1fr}.wrap{padding-top:24px}}
+    .avatar{width:42px;height:42px;border-radius:999px;border:1px solid rgba(95,150,214,.5);background:#041024;object-fit:cover}
+    .adminbox{display:flex;align-items:center;gap:10px;justify-content:flex-end;color:rgba(255,255,255,.75);font-size:12px}
+    .error{border:1px solid rgba(248,113,113,.45);background:rgba(127,29,29,.26);border-radius:10px;padding:12px;margin:14px 0;color:#fecaca;text-align:left}
+    code{background:rgba(255,255,255,.08);padding:2px 5px;border-radius:5px;color:#d9e9ff}
+    @media(max-width:760px){.head{display:block}.grid{grid-template-columns:1fr}.wrap{padding-top:24px}.adminbox{justify-content:flex-start;margin-top:14px}}
   </style>
 </head>
 <body>
   <main class="wrap" id="app"></main>
   <script>
-    const KEY="newair-whitelist-candidatures";
     const app=document.getElementById("app");
     const escapeHtml=value=>String(value||"Non renseigné").replace(/[<>&]/g,m=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[m]));
-    const readLocal=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch{return[]}};
-    const writeLocal=v=>localStorage.setItem(KEY,JSON.stringify(v));
     let selected=null;
-    async function read(){try{const r=await fetch("/api/candidatures",{cache:"no-store"});if(r.ok){const j=await r.json();if(Array.isArray(j.rows))return j.rows}}catch{}return readLocal()}
-    async function syncStatus(id,status){try{await fetch("/api/candidatures/status",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,status})})}catch{}}
-    async function setStatus(id,status){const rows=await read();const row=rows.find(x=>x.id===id);if(row){row.status=status;row.reviewed_at=new Date().toISOString();writeLocal(rows);await syncStatus(id,status)}render(id)}
+    let currentAdmin=null;
+    function avatarUrl(admin){return admin?.avatar?`https://cdn.discordapp.com/avatars/${admin.id}/${admin.avatar}.png?size=80`:"/assets/newair-logo-swirl.png"}
+    async function me(){try{const r=await fetch("/api/admin/me",{cache:"no-store"});const j=await r.json();if(r.ok&&j.ok)return j;return j}catch{return{ok:false,error:"Impossible de contacter le serveur."}}}
+    async function read(){const r=await fetch("/api/candidatures",{cache:"no-store"});if(r.status===401){showLogin("Session expirée. Reconnecte-toi avec Discord.");throw new Error("unauthorized")}const j=await r.json();return Array.isArray(j.rows)?j.rows:[]}
+    async function setStatus(id,status){await fetch("/api/candidatures/status",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id,status})});render(id)}
     function field(label,value){return `<div class="label">${label}</div><pre>${escapeHtml(value)}</pre>`}
     function details(x){if(!x)return `<p class="empty">Sélectionne une candidature.</p>`;return `<div><div class="label">Candidat</div><h2 style="font-size:30px;margin:0">${escapeHtml(`${x.rp_firstname||""} ${x.rp_lastname||""}`.trim()||"Sans nom")}</h2><p class="muted">${escapeHtml(x.email||"email non renseigné")} - ${escapeHtml(x.age||"?")} ans</p></div><div class="actionbar"><button class="btn" data-status="accepted">Accepter</button><button class="btn red" data-status="rejected">Refuser</button><span class="badge ${escapeHtml(x.status||"pending")}">${escapeHtml(x.status||"pending")}</span></div>${field("Discord",x.discord_tag)}${field("Heures GTA RP",x.hours_gtarp||"Non renseigné")}${field("Projet RP",x.rp_project)}${field("Background",x.rp_background)}${field("Motivations",x.motivation)}<div class="label">Signature</div>${x.signature?`<img class="signature" src="${x.signature}" alt="Signature">`:`<p class="empty">Aucune signature.</p>`}`}
-    async function render(id=selected){const rows=await read();selected=id||rows[0]?.id||null;const row=rows.find(x=>x.id===selected)||null;app.innerHTML=`<header class="head"><div><div class="label">Panneau staff</div><h1 class="title">ADMIN NewAir</h1><p class="muted">${rows.length} candidature(s) whitelist</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn ghost" id="refreshBtn">Actualiser</button><button class="btn ghost" id="exportBtn">Export JSON</button><a class="btn red" href="/">Retour site</a></div></header><section class="grid"><aside class="list">${rows.length?rows.map(x=>`<button class="item ${x.id===selected?"active":""}" data-id="${escapeHtml(x.id)}"><strong>${escapeHtml(`${x.rp_firstname||"Sans"} ${x.rp_lastname||"nom"}`)}</strong><small>${escapeHtml(x.discord_tag||"Discord vide")} - ${new Date(x.created_at||Date.now()).toLocaleString("fr-FR")}</small><em class="${escapeHtml(x.status||"pending")}">${escapeHtml(x.status||"pending")}</em></button>`).join(""):`<div class="empty">Aucune candidature pour l'instant.</div>`}</aside><article class="card">${details(row)}</article></section>`;document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>render(b.dataset.id));document.querySelectorAll("[data-status]").forEach(b=>b.onclick=()=>setStatus(row.id,b.dataset.status));document.getElementById("refreshBtn").onclick=()=>render(selected);document.getElementById("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="newair-candidatures.json";a.click()}}
-    render();
+    function discordErrorMessage(){const e=new URLSearchParams(location.search).get("error");if(e==="role")return"Ton compte Discord est bien connecté, mais tu n’as pas le rôle admin autorisé sur le serveur.";if(e==="discord")return"Erreur Discord. Vérifie le bot, le client secret, le serveur et les rôles sur Render.";if(e==="discord_state")return"Connexion Discord expirée. Réessaie.";return""}
+    function showLogin(extra=""){const err=extra||discordErrorMessage();app.innerHTML=`<section class="login"><img src="/assets/newair-logo-swirl.png" alt="NewAir" style="height:74px;margin:0 auto 22px"><div class="label">Sécurité Discord</div><h1 class="title" style="font-size:54px">ADMIN NewAir</h1><p class="muted">Le panel admin est maintenant lié aux rôles Discord. Seuls les membres qui ont le rôle admin autorisé peuvent entrer.</p>${err?`<div class="error">${escapeHtml(err)}</div>`:""}<a class="btn discord" href="/api/discord/login" style="margin-top:16px;width:100%">Se connecter avec Discord</a><a class="muted" href="/" style="display:block;margin-top:18px">Retour au site</a><div class="error" style="margin-top:18px"><strong>À configurer sur Render :</strong><br><code>DISCORD_CLIENT_ID</code>, <code>DISCORD_CLIENT_SECRET</code>, <code>DISCORD_BOT_TOKEN</code>, <code>DISCORD_GUILD_ID</code>, <code>DISCORD_ADMIN_ROLE_IDS</code>, <code>PUBLIC_BASE_URL</code></div></section>`}
+    async function render(id=selected){const rows=await read();selected=id||rows[0]?.id||null;const row=rows.find(x=>x.id===selected)||null;const name=currentAdmin?.global_name||currentAdmin?.username||"Admin Discord";app.innerHTML=`<header class="head"><div><div class="label">Panneau staff Discord</div><h1 class="title">ADMIN NewAir</h1><p class="muted">${rows.length} candidature(s) whitelist</p></div><div><div class="adminbox"><img class="avatar" src="${avatarUrl(currentAdmin)}" alt="Avatar"><span>Connecté : ${escapeHtml(name)}</span></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:10px"><button class="btn ghost" id="refreshBtn">Actualiser</button><button class="btn ghost" id="exportBtn">Export JSON</button><a class="btn red" href="/api/discord/logout">Déconnexion</a></div></div></header><section class="grid"><aside class="list">${rows.length?rows.map(x=>`<button class="item ${x.id===selected?"active":""}" data-id="${escapeHtml(x.id)}"><strong>${escapeHtml(`${x.rp_firstname||"Sans"} ${x.rp_lastname||"nom"}`)}</strong><small>${escapeHtml(x.discord_tag||"Discord vide")} - ${new Date(x.created_at||Date.now()).toLocaleString("fr-FR")}</small><em class="${escapeHtml(x.status||"pending")}">${escapeHtml(x.status||"pending")}</em></button>`).join(""):`<div class="empty">Aucune candidature pour l'instant.</div>`}</aside><article class="card">${details(row)}</article></section>`;document.querySelectorAll("[data-id]").forEach(b=>b.onclick=()=>render(b.dataset.id));document.querySelectorAll("[data-status]").forEach(b=>b.onclick=()=>setStatus(row.id,b.dataset.status));document.getElementById("refreshBtn").onclick=()=>render(selected);document.getElementById("exportBtn").onclick=()=>{const blob=new Blob([JSON.stringify(rows,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="newair-candidatures.json";a.click()}}
+    (async()=>{const auth=await me();if(!auth.ok){showLogin(auth.error);return}currentAdmin=auth.admin;render()})();
   </script>
-  <script defer src="/assets/newair-custom.js?v=night6" data-local-custom="newair"></script>
+  <script defer src="/assets/newair-custom.js?v=night7" data-local-custom="newair"></script>
 </body>
 </html>
