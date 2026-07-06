@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="fr" class="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Équipe NewAir</title>
+  <link rel="stylesheet" href="/assets/styles-Db9UqP69.css">
+  <link rel="stylesheet" href="/assets/newair-custom.css?v=team1">
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#04060d;color:#fff;font-family:'Space Grotesk',system-ui,sans-serif;min-height:100vh;overflow-x:hidden}.bg{position:fixed;inset:0;z-index:-2;background:radial-gradient(circle at 20% 0%,rgba(95,150,214,.18),transparent 36%),radial-gradient(circle at 80% 10%,rgba(11,42,91,.28),transparent 34%),linear-gradient(180deg,#050712,#02030a)}.bg:after{content:"";position:absolute;inset:0;background:rgba(0,0,0,.34);backdrop-filter:blur(1px)}.wrap{max-width:1180px;margin:0 auto;padding:118px 18px 70px}.panel{border:1px solid rgba(95,150,214,.24);background:rgba(8,12,24,.78);border-radius:20px;box-shadow:0 0 50px rgba(11,42,91,.24);overflow:hidden}.head{padding:28px 28px 20px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;justify-content:space-between;gap:22px;align-items:flex-start}.kicker{font-size:11px;letter-spacing:.42em;text-transform:uppercase;color:#9fc3ef;font-weight:800}.title{font-family:'Bebas Neue',Impact,sans-serif;font-size:clamp(46px,7vw,82px);line-height:.85;margin:8px 0 12px;letter-spacing:.04em}.title em{color:#9fc3ef;font-style:italic}.desc{max-width:720px;color:rgba(255,255,255,.68);font-size:15px;line-height:1.65;margin:0}.badge{border:1px solid rgba(95,150,214,.35);background:rgba(95,150,214,.1);border-radius:999px;padding:10px 14px;color:#d9e9ff;font-size:11px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}.content{padding:24px 22px 28px}.section{margin-bottom:30px}.section-title{display:flex;align-items:center;gap:12px;margin:0 0 16px;font-size:13px;letter-spacing:.32em;text-transform:uppercase;color:#d9e9ff}.section-title:before{content:"";width:9px;height:9px;border-radius:50%;background:#5f96d6;box-shadow:0 0 16px rgba(95,150,214,.8)}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:18px}.card{min-height:250px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg,rgba(255,255,255,.06),rgba(255,255,255,.02));border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.26);transition:.2s}.card:hover{transform:translateY(-4px);border-color:rgba(95,150,214,.62);box-shadow:0 18px 50px rgba(11,42,91,.32)}.avatar{height:170px;background:linear-gradient(135deg,#071a3d,#0b2a5b 55%,#5f96d6);display:grid;place-items:center;position:relative;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover}.initials{font-family:'Bebas Neue',Impact,sans-serif;font-size:56px;letter-spacing:.08em;text-shadow:0 8px 24px rgba(0,0,0,.45)}.body{padding:13px 13px 15px}.name{font-weight:900;letter-spacing:.08em;margin:0 0 5px;font-size:15px}.role{display:inline-flex;align-items:center;gap:7px;color:#9fc3ef;font-size:10px;letter-spacing:.26em;text-transform:uppercase;font-weight:800}.sub{margin:9px 0 0;color:rgba(255,255,255,.48);font-size:12px;line-height:1.35}.empty{border:1px dashed rgba(255,255,255,.16);border-radius:14px;padding:24px;text-align:center;color:rgba(255,255,255,.48)}.toplink{display:inline-flex;margin-bottom:16px;color:#9fc3ef;text-decoration:none;font-size:12px;letter-spacing:.18em;text-transform:uppercase}@media(max-width:760px){.wrap{padding-top:92px}.head{display:block;padding:22px}.badge{display:inline-flex;margin-top:18px}.content{padding:18px}.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.avatar{height:145px}}
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <main class="wrap">
+    <a class="toplink" href="/">← Retour accueil</a>
+    <section class="panel">
+      <header class="head">
+        <div>
+          <div class="kicker">Notre staff</div>
+          <h1 class="title">Équipe <em>NewAir</em></h1>
+          <p class="desc">Les visages derrière le serveur : fondateurs, superadmins et staff classés selon leur rôle Discord.</p>
+        </div>
+        <div class="badge" id="memberCount">Chargement...</div>
+      </header>
+      <div class="content" id="teamRoot"><div class="empty">Chargement de l’équipe NewAir...</div></div>
+    </section>
+  </main>
+  <script>
+    const roleOrder=["Fondateur","SuperAdmin","Staff","Admin","Modérateur","Membre"];
+    const roleLabels={Fondateur:"Fondateurs",SuperAdmin:"SuperAdmins",Staff:"Staff",Admin:"Admins",Modérateur:"Modérateurs",Membre:"Membres"};
+    const fallback={members:[{name:"Fondateur NewAir",role:"Fondateur",subtitle:"Direction du serveur"},{name:"SuperAdmin NewAir",role:"SuperAdmin",subtitle:"Gestion staff et serveur"},{name:"Staff NewAir",role:"Staff",subtitle:"Support et modération"}]};
+    const safe=value=>String(value||"").replace(/[<>&]/g,m=>({"<":"&lt;",">":"&gt;","&":"&amp;"}[m]));
+    function initials(name){return String(name||"N").split(/\s+/).map(x=>x[0]).join("").slice(0,2).toUpperCase()||"N"}
+    function card(member){return `<article class="card"><div class="avatar">${member.avatar?`<img src="${safe(member.avatar)}" alt="${safe(member.name)}">`:`<div class="initials">${safe(initials(member.name))}</div>`}</div><div class="body"><h3 class="name">${safe(member.name)}</h3><div class="role">✦ ${safe(member.role||"Staff")}</div><p class="sub">${safe(member.subtitle||member.discord_id||"Membre de l'équipe NewAir")}</p></div></article>`}
+    function render(data){const members=Array.isArray(data.members)?data.members:[];document.getElementById("memberCount").textContent=`${members.length} membre(s)`;if(!members.length){teamRoot.innerHTML='<div class="empty">Aucun membre configuré.</div>';return}teamRoot.innerHTML=roleOrder.map(role=>{const list=members.filter(m=>(m.role||"Staff").toLowerCase()===role.toLowerCase());if(!list.length)return"";return `<section class="section"><h2 class="section-title">${roleLabels[role]||role}</h2><div class="grid">${list.map(card).join("")}</div></section>`}).join("")}
+    async function load(){try{const api=await fetch('/api/team',{cache:'no-store'});if(api.ok){render(await api.json());return}}catch{}try{const r=await fetch('/assets/newair-team.json?v=1',{cache:'no-store'});render(r.ok?await r.json():fallback)}catch{render(fallback)}}
+    load();
+  </script>
+  <script defer src="/assets/newair-custom.js?v=team1"></script>
+</body>
+</html>
