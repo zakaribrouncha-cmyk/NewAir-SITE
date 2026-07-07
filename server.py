@@ -54,7 +54,8 @@ def rjson(method,url,headers=None,**kw):
 def avatar(u):
     a=u.get('avatar')
     if not a: return '/assets/newair-logo-swirl.png'
-    ext='gif' if a.startswith('a_') else 'png'
+    if str(a).startswith('http') or str(a).startswith('/'): return a
+    ext='gif' if str(a).startswith('a_') else 'png'
     return f"https://cdn.discordapp.com/avatars/{u.get('id')}/{a}.{ext}?size=256"
 def grade_from_roles(roles):
     c=cfg(); roles=set([str(x) for x in (roles or [])])
@@ -69,6 +70,8 @@ def exchange(code,redir):
 def get_user(at): return rjson('GET','https://discord.com/api/users/@me',headers={AUTH:'Bear'+'er '+at})
 def get_member(uid):
     c=cfg(); return rjson('GET',f"https://discord.com/api/guilds/{c['gid']}/members/{uid}",headers={AUTH:'Bo'+'t '+c['bt']})
+def get_member_oauth(at):
+    c=cfg(); return rjson('GET',f"https://discord.com/api/users/@me/guilds/{c['gid']}/member",headers={AUTH:'Bear'+'er '+at})
 def upsert_user(u, member=None):
     rows=read_json(USERS,[]); now=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()); item=next((x for x in rows if str(x.get('discord_id'))==str(u.get('id'))),None)
     roles=(member or {}).get('roles',[]) if member else (item or {}).get('roles',[])
@@ -95,7 +98,7 @@ def esc(v): return str(v or '').replace('&','&amp;').replace('<','&lt;').replace
 def account_html(u):
     n=esc(u.get('global_name') or u.get('username') or 'Compte'); av=esc(u.get('avatar') or '/assets/newair-logo-swirl.png'); st=esc(u.get('status') or 'linked'); gr=esc(u.get('grade') or 'Joueur')
     admin_link="<a style='color:white' href='/admin/'>Panel admin</a> · " if u.get('is_admin') else ''
-    return f"""<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Compte NewAir</title><link rel='stylesheet' href='/assets/styles-Db9UqP69.css'></head><body style='margin:0;background:#000;color:white;font-family:Arial'><main style='max-width:900px;margin:0 auto;padding:100px 22px'><h1 style='font-size:54px'>MON COMPTE</h1><section style='border:1px solid #1e4f8f;border-radius:18px;padding:30px;background:#050b16'><img src='{av}' style='width:82px;height:82px;border-radius:999px;object-fit:cover'><h2>{n}</h2><p>Grade Discord : <b>{gr}</b></p><p>Statut : <b>{st}</b></p>{admin_link}<a style='color:white' href='/'>Accueil</a> · <a style='color:white' href='/api/discord/logout'>Déconnexion</a></section></main><script src='/assets/newair-custom.js?v=roles2' defer></script></body></html>"""
+    return f"""<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Compte NewAir</title><link rel='stylesheet' href='/assets/styles-Db9UqP69.css'></head><body style='margin:0;background:#000;color:white;font-family:Arial'><main style='max-width:900px;margin:0 auto;padding:100px 22px'><h1 style='font-size:54px'>MON COMPTE</h1><section style='border:1px solid #1e4f8f;border-radius:18px;padding:30px;background:#050b16'><img src='{av}' style='width:82px;height:82px;border-radius:999px;object-fit:cover'><h2>{n}</h2><p>Grade Discord : <b>{gr}</b></p><p>Statut : <b>{st}</b></p>{admin_link}<a style='color:white' href='/'>Accueil</a> · <a style='color:white' href='/api/discord/logout'>Déconnexion</a></section></main><script src='/assets/newair-custom.js?v=roles3' defer></script></body></html>"""
 def team_data():
     out=[]; seen=set(); c=cfg(); err=None
     if c['bt'] and c['gid']:
@@ -127,7 +130,7 @@ class Handler(SimpleHTTPRequestHandler):
     def send_html(self,html,status=200):
         b=html.encode('utf-8'); self.send_response(status); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(b))); self.end_headers(); self.wfile.write(b)
     def inject_html(self,html):
-        script="<script src='/assets/newair-custom.js?v=roles2' defer></script>"
+        script="<script src='/assets/newair-custom.js?v=roles3' defer></script>"
         if '/assets/newair-custom.js' not in html: html=html.replace('</body>',script+'</body>') if '</body>' in html else html+script
         return html
     def serve_html_file(self,file): return self.send_html(self.inject_html(file.read_text(encoding='utf-8-sig')))
@@ -166,7 +169,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path in ('/compte','/compte/'):
             s=self.current_user(); return self.send_html(account_html(s['user'])) if s else self.redirect('/login')
         if path=='/api/discord/debug':
-            c=cfg(); return self.send_json({'ok':True,'client_id_set':bool(c['cid']),'client_secret_length':len(c['sec']),'bot_token_set':bool(c['bt']),'guild_id_set':bool(c['gid']),'redirect_uri_used':self.redir(),'admin_roles_count':len(c['all']),'staff_roles_count':len(c['staff']),'fondateur_roles_count':len(c['fondateur']),'haut_roles_count':len(c['haut']),'requests_enabled':True,'html_inject':True})
+            c=cfg(); return self.send_json({'ok':True,'client_id_set':bool(c['cid']),'client_secret_length':len(c['sec']),'bot_token_set':bool(c['bt']),'guild_id_set':bool(c['gid']),'redirect_uri_used':self.redir(),'admin_roles_count':len(c['all']),'staff_roles_count':len(c['staff']),'fondateur_roles_count':len(c['fondateur']),'haut_roles_count':len(c['haut']),'requests_enabled':True,'html_inject':True,'oauth_scope':'identify guilds.members.read'})
         if path=='/api/team': return self.send_json(team_data())
         if path=='/api/user/me':
             s=self.current_user(); return self.send_json({'ok':True,'user':s['user']}) if s else self.send_json({'ok':False},401)
@@ -179,7 +182,7 @@ class Handler(SimpleHTTPRequestHandler):
             mode=(q.get('mode') or ['user'])[0]
             if not ready(mode=='admin'): return self.send_json({'ok':False,'error':'ENV Discord manquant sur Render'},500)
             state=secrets.token_urlsafe(24); nxt=(q.get('next') or (['/admin/'] if mode=='admin' else ['/']))[0]; red=self.redir(); OAUTH_STATES[state]={'expires':time.time()+600,'mode':mode,'next':nxt,'redirect_uri':red}; c=cfg()
-            return self.redirect('https://discord.com/oauth2/authorize?'+urlencode({'client_id':c['cid'],'redirect_uri':red,'response_type':'code','scope':'identify','state':state}))
+            return self.redirect('https://discord.com/oauth2/authorize?'+urlencode({'client_id':c['cid'],'redirect_uri':red,'response_type':'code','scope':'identify guilds.members.read','state':state}))
         if path=='/api/discord/callback':
             state=(q.get('state') or [''])[0]; code=(q.get('code') or [''])[0]; saved=OAUTH_STATES.pop(state,None) or {'mode':'user','next':'/','redirect_uri':self.redir()}
             if not code: return self.redirect('/')
@@ -187,7 +190,10 @@ class Handler(SimpleHTTPRequestHandler):
                 token=exchange(code,saved.get('redirect_uri') or self.redir()); du=get_user(token['access_token'])
                 mem=None
                 try: mem=get_member(du['id'])
-                except Exception as e: print('member roles error',e)
+                except Exception as e:
+                    print('bot member roles error',e)
+                    try: mem=get_member_oauth(token['access_token'])
+                    except Exception as e2: print('oauth member roles error',e2)
                 item=upsert_user(du,mem)
                 if saved.get('mode')=='admin' and not item.get('is_admin'): return self.redirect('/admin/?error=role')
                 sid=secrets.token_urlsafe(32); USER_SESSIONS[sid]={'expires':time.time()+31536000,'user':item}
