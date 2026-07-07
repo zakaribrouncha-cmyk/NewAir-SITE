@@ -81,7 +81,7 @@ def set_status(uid,status):
 def esc(v): return str(v or '').replace('&','&amp;').replace('<','&lt;').replace('>','&gt;').replace('"','&quot;')
 def account_html(u):
     n=esc(u.get('global_name') or u.get('username') or 'Compte'); av=esc(u.get('avatar') or '/assets/newair-logo-swirl.png'); st=esc(u.get('status') or 'linked')
-    return f"""<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Compte NewAir</title><link rel='stylesheet' href='/assets/styles-Db9UqP69.css'></head><body style='margin:0;background:#000;color:white;font-family:Arial'><main style='max-width:900px;margin:0 auto;padding:100px 22px'><h1 style='font-size:54px'>MON COMPTE</h1><section style='border:1px solid #1e4f8f;border-radius:18px;padding:30px;background:#050b16'><img src='{av}' style='width:82px;height:82px;border-radius:999px;object-fit:cover'><h2>{n}</h2><p>Statut : <b>{st}</b></p><a style='color:white' href='/'>Accueil</a> · <a style='color:white' href='/api/discord/logout'>Déconnexion</a></section></main></body></html>"""
+    return f"""<!doctype html><html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'><title>Compte NewAir</title><link rel='stylesheet' href='/assets/styles-Db9UqP69.css'></head><body style='margin:0;background:#000;color:white;font-family:Arial'><main style='max-width:900px;margin:0 auto;padding:100px 22px'><h1 style='font-size:54px'>MON COMPTE</h1><section style='border:1px solid #1e4f8f;border-radius:18px;padding:30px;background:#050b16'><img src='{av}' style='width:82px;height:82px;border-radius:999px;object-fit:cover'><h2>{n}</h2><p>Statut : <b>{st}</b></p><a style='color:white' href='/'>Accueil</a> · <a style='color:white' href='/api/discord/logout'>Déconnexion</a></section></main><script src='/assets/newair-custom.js?v=discord4' defer></script></body></html>"""
 def team_data():
     c=cfg()
     if not c['bt'] or not c['gid']: return {'members':[]}
@@ -103,6 +103,11 @@ class Handler(SimpleHTTPRequestHandler):
         b=json.dumps(v,ensure_ascii=False).encode('utf-8'); self.send_response(status); self.send_header('Content-Type','application/json; charset=utf-8'); self.send_header('Content-Length',str(len(b))); self.end_headers(); self.wfile.write(b)
     def send_html(self,html,status=200):
         b=html.encode('utf-8'); self.send_response(status); self.send_header('Content-Type','text/html; charset=utf-8'); self.send_header('Content-Length',str(len(b))); self.end_headers(); self.wfile.write(b)
+    def inject_html(self,html):
+        script="<script src='/assets/newair-custom.js?v=discord4' defer></script>"
+        if '/assets/newair-custom.js' not in html: html=html.replace('</body>',script+'</body>') if '</body>' in html else html+script
+        return html
+    def serve_html_file(self,file): return self.send_html(self.inject_html(file.read_text(encoding='utf-8-sig')))
     def redirect(self,loc,cookie=None):
         self.send_response(302); self.send_header('Location',loc); 
         if cookie: self.send_header('Set-Cookie',cookie)
@@ -128,7 +133,7 @@ class Handler(SimpleHTTPRequestHandler):
         if path in ('/compte','/compte/'):
             s=self.current_user(); return self.send_html(account_html(s['user'])) if s else self.redirect('/login')
         if path=='/api/discord/debug':
-            c=cfg(); return self.send_json({'ok':True,'client_id_set':bool(c['cid']),'client_secret_length':len(c['sec']),'bot_token_set':bool(c['bt']),'guild_id_set':bool(c['gid']),'redirect_uri_used':self.redir(),'admin_roles_count':len(c['all']),'requests_enabled':True})
+            c=cfg(); return self.send_json({'ok':True,'client_id_set':bool(c['cid']),'client_secret_length':len(c['sec']),'bot_token_set':bool(c['bt']),'guild_id_set':bool(c['gid']),'redirect_uri_used':self.redir(),'admin_roles_count':len(c['all']),'requests_enabled':True,'html_inject':True})
         if path=='/api/team': return self.send_json(team_data())
         if path=='/api/user/me':
             s=self.current_user(); return self.send_json({'ok':True,'user':s['user']}) if s else self.send_json({'ok':False},401)
@@ -164,7 +169,10 @@ class Handler(SimpleHTTPRequestHandler):
             if not self.current_admin(): return self.send_json({'ok':False},401)
             return self.send_json({'ok':True,'rows':read_json(CANDIDATURES,[])})
         candidate=ROOT/path.lstrip('/')
-        if path!='/' and not candidate.exists() and not Path(path).suffix: self.path='/index.html'
+        if path in ('/','/index.html'): candidate=ROOT/'index.html'
+        elif candidate.is_dir(): candidate=candidate/'index.html'
+        elif path!='/' and not candidate.exists() and not Path(path).suffix: candidate=ROOT/'index.html'
+        if candidate.exists() and candidate.suffix.lower()=='.html': return self.serve_html_file(candidate)
         return super().do_GET()
     def do_POST(self):
         path=urlparse(self.path).path; data=self.body_json()
