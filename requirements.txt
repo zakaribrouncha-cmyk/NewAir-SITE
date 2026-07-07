@@ -1,1 +1,1 @@
-# NewAir uses only Python standard library.
+requests==2.32.3
