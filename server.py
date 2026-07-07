@@ -258,7 +258,7 @@ class Handler(SimpleHTTPRequestHandler):
         path = parsed.path
         q = parse_qs(parsed.query)
         if path in ("/login", "/login/"):
-            return self.redirect("/api/discord/login?mode=user&next=/compte")
+            return self.redirect("/api/discord/login?mode=user&next=/")
         if path in ("/compte", "/compte/"):
             s = self.current_user()
             return self.send_html(account_html(s["user"])) if s else self.redirect("/login")
@@ -279,7 +279,8 @@ class Handler(SimpleHTTPRequestHandler):
             if not ready(mode == "admin"):
                 return self.send_json({"ok": False, "error": "ENV Discord manquant sur Render"}, 500)
             state = secrets.token_urlsafe(24)
-            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": (q.get("next") or (["/admin/"] if mode == "admin" else ["/compte"]))[0]}
+            default_next = "/admin/" if mode == "admin" else "/"
+            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": (q.get("next") or [default_next])[0]}
             c = cfg()
             url = "https://discord.com/oauth2/authorize?" + urlencode({"client_id": c["client_id"], "redirect_uri": c["redirect_uri"], "response_type": "code", "scope": "identify", "state": state})
             return self.redirect(url)
@@ -303,7 +304,7 @@ class Handler(SimpleHTTPRequestHandler):
                     return self.redirect(saved.get("next") or "/admin/", f"{ADMIN_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400")
                 sid = secrets.token_urlsafe(32)
                 USER_SESSIONS[sid] = {"expires": time.time() + 31536000, "user": item}
-                return self.redirect(saved.get("next") or "/compte", f"{USER_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000")
+                return self.redirect(saved.get("next") or "/", f"{USER_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000")
             except Exception as e:
                 print("auth error", e)
                 return self.redirect("/login")
@@ -357,6 +358,7 @@ class Handler(SimpleHTTPRequestHandler):
         rows.insert(0, row)
         write_json(CANDIDATURES, rows)
         return self.send_json({"ok": True, "id": row["id"]})
+
 
 if __name__ == "__main__":
     os.chdir(ROOT)
