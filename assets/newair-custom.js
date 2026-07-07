@@ -5,10 +5,10 @@
   var tiktokIcon='<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5" aria-hidden="true"><path d="M16.6 3c.31 2.16 1.52 3.73 3.58 4.43v3.31a7.77 7.77 0 0 1-3.55-.98v5.46c0 3.53-2.35 5.78-5.64 5.78-3.1 0-5.17-2.02-5.17-4.9 0-3.25 2.55-5.26 6.03-4.83v3.4c-1.32-.25-2.26.29-2.26 1.34 0 .86.68 1.45 1.64 1.45 1.1 0 1.82-.66 1.82-2.18V3h3.55Z"></path></svg>';
 
   function getSession(){try{return JSON.parse(localStorage.getItem(sessionKey)||'null')}catch(e){return null}}
-  function isHome(){return !location.pathname||location.pathname==='/'||location.pathname==='/index.html'}
+  function needsVideo(){return location.pathname==='/'||location.pathname==='/index.html'||location.pathname.indexOf('/map')===0}
 
-  function forceHomepageVideo(){
-    if(!isHome())return;
+  function forcePageVideo(){
+    if(!needsVideo())return;
     var video=document.querySelector('body > video, video[src*="/video/bg.mp4"], video[src*="bg.mp4"]');
     if(!video){
       video=document.createElement('video');
@@ -18,11 +18,12 @@
     }
     video.style.cssText='position:fixed!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;pointer-events:none!important;opacity:1!important;display:block!important;visibility:visible!important;filter:none!important';
     try{video.muted=true;video.loop=true;video.play().catch(function(){})}catch(e){}
+    document.body.style.backgroundColor='transparent';
+    document.documentElement.style.backgroundColor='transparent';
     if(video.nextElementSibling&&video.nextElementSibling.tagName==='DIV')video.nextElementSibling.style.background='rgba(0,0,0,0.18)';
-    document.querySelectorAll('*').forEach(function(el){
-      var bg='';
-      try{bg=getComputedStyle(el).backgroundImage||''}catch(e){}
-      if(bg.indexOf('hero-newair')!==-1||bg.indexOf('hero')!==-1&&bg.indexOf('newair')!==-1){
+    document.querySelectorAll('main,main section,main div[class*="bg-"],main div[class*="from-"],main div[class*="to-"]').forEach(function(el){
+      var bg='';try{bg=getComputedStyle(el).backgroundImage||''}catch(e){}
+      if(location.pathname==='/'||bg.indexOf('hero')!==-1||bg.indexOf('newair')!==-1){
         el.style.backgroundImage='none';
         el.style.backgroundColor='transparent';
       }
@@ -34,10 +35,11 @@
     document.querySelectorAll('.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-popup-pane,.leaflet-tooltip-pane,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-popup,.leaflet-tooltip').forEach(function(el){
       el.style.display='none';el.style.opacity='0';el.style.pointerEvents='none';
     });
-    document.querySelectorAll('svg').forEach(function(svg){
-      var cls=String(svg.getAttribute('class')||'');
+    document.querySelectorAll('main svg').forEach(function(svg){
+      if(svg.closest('header')||svg.closest('nav'))return;
       var html=svg.innerHTML||'';
-      if(cls.indexOf('map-pin')!==-1||html.indexOf('M20 10c0')!==-1||html.indexOf('m12')!==-1&&html.indexOf('2.69')!==-1){
+      var cls=String(svg.getAttribute('class')||'');
+      if(cls.indexOf('map-pin')!==-1||html.indexOf('M20 10c0')!==-1||html.indexOf('circle')!==-1){
         var p=svg.closest('button,a,div,span')||svg;
         p.style.display='none';p.style.opacity='0';p.style.pointerEvents='none';
       }
@@ -81,7 +83,7 @@
     document.head.appendChild(s)
   }
 
-  function run(){addStyle();forceHomepageVideo();hideMapPins();showConnectedAccount();addTeamLink();keepOnlyTikTok()}
+  function run(){addStyle();forcePageVideo();hideMapPins();showConnectedAccount();addTeamLink();keepOnlyTikTok()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
   setTimeout(run,800);setTimeout(run,2000);setTimeout(run,4000);setTimeout(run,7000);
 })();
