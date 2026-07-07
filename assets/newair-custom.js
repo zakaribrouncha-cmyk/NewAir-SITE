@@ -1,133 +1,22 @@
-// NewAir safe mode + light extras
+// NewAir safe mode + Discord UI sync
 (function(){
-  var tiktokUrl='https://www.tiktok.com/@nhc0023';
-  var tiktokIcon='<svg viewBox="0 0 24 24" fill="currentColor" class="w-5 h-5" aria-hidden="true"><path d="M16.6 3c.31 2.16 1.52 3.73 3.58 4.43v3.31a7.77 7.77 0 0 1-3.55-.98v5.46c0 3.53-2.35 5.78-5.64 5.78-3.1 0-5.17-2.02-5.17-4.9 0-3.25 2.55-5.26 6.03-4.83v3.4c-1.32-.25-2.26.29-2.26 1.34 0 .86.68 1.45 1.64 1.45 1.1 0 1.82-.66 1.82-2.18V3h3.55Z"></path></svg>';
   var currentUser=null;
-
-  function ensureVideo(){
-    var video=document.querySelector('body > video, video[src*="bg.mp4"]');
-    if(!video){
-      video=document.createElement('video');
-      video.src='/video/bg.mp4';
-      video.autoplay=true; video.loop=true; video.muted=true; video.playsInline=true; video.setAttribute('aria-hidden','true');
-      document.body.insertBefore(video,document.body.firstChild);
-    }
-    video.style.cssText='position:fixed!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;pointer-events:none!important;opacity:1!important;display:block!important;visibility:visible!important;filter:none!important';
-    try{video.muted=true;video.loop=true;video.play().catch(function(){})}catch(e){}
-    document.querySelectorAll('body > div[style*="position:fixed"][style*="background"]').forEach(function(d){d.style.background='rgba(0,0,0,0.26)'});
-    document.querySelectorAll('body > div:not([data-newair-bg]), body > main, #root, #__next').forEach(function(el){
-      if(el.tagName==='SCRIPT'||el.tagName==='STYLE'||el.tagName==='VIDEO')return;
-      el.style.position=el.style.position||'relative';
-      if(!el.style.zIndex)el.style.zIndex='2';
-    });
-    document.documentElement.style.backgroundColor='#000';
-    document.body.style.backgroundColor='#000';
-  }
-
-  function fixPageBackdrops(){
-    document.querySelectorAll('main, main > section, main > div').forEach(function(el){
-      var bg='';try{bg=getComputedStyle(el).backgroundImage||''}catch(e){}
-      if(bg.indexOf('hero-newair')!==-1 || bg.indexOf('url(')!==-1 && bg.indexOf('hero')!==-1){el.style.backgroundImage='none'}
-    });
-  }
-
-  function hideMapPins(){
-    if(location.pathname.indexOf('/map')!==0)return;
-    document.querySelectorAll('.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-popup-pane,.leaflet-tooltip-pane,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-popup,.leaflet-tooltip').forEach(function(el){
-      el.style.display='none';el.style.opacity='0';el.style.pointerEvents='none';
-    });
-    document.querySelectorAll('main svg').forEach(function(svg){
-      if(svg.closest('header')||svg.closest('nav'))return;
-      var html=svg.innerHTML||''; var cls=String(svg.getAttribute('class')||'');
-      if(cls.indexOf('map-pin')!==-1||html.indexOf('M20 10c0')!==-1||html.indexOf('circle')!==-1){
-        var p=svg.closest('button,a,div,span')||svg; p.style.display='none'; p.style.opacity='0'; p.style.pointerEvents='none';
-      }
-    });
-  }
-
+  function ensureVideo(){var v=document.querySelector('body>video,video[src*="bg.mp4"]');if(!v){v=document.createElement('video');v.src='/video/bg.mp4';v.autoplay=true;v.loop=true;v.muted=true;v.playsInline=true;document.body.insertBefore(v,document.body.firstChild)}v.style.cssText='position:fixed!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important;pointer-events:none!important;opacity:1!important;display:block!important;visibility:visible!important';try{v.muted=true;v.play().catch(function(){})}catch(e){}document.querySelectorAll('body>div:not([data-newair-bg]),body>main,#root,#__next').forEach(function(el){if(['SCRIPT','STYLE','VIDEO'].indexOf(el.tagName)!==-1)return;el.style.position=el.style.position||'relative';if(!el.style.zIndex)el.style.zIndex='2'})}
+  function addStyle(){if(document.getElementById('newair-light-style'))return;var s=document.createElement('style');s.id='newair-light-style';s.textContent='body>video,video[src*="bg.mp4"]{opacity:1!important;display:block!important;visibility:visible!important}.newair-connected-account{max-width:245px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-color:rgba(95,150,214,.55)!important;background:rgba(11,42,91,.22)!important;color:#d9e9ff!important;box-shadow:0 0 20px rgba(95,150,214,.24)!important;padding:6px 10px!important;border-radius:999px!important}.newair-account-pill{display:inline-flex;align-items:center;gap:8px}.newair-account-pill img{width:26px;height:26px;border-radius:999px;object-fit:cover}.newair-social-link{display:inline-flex!important;align-items:center!important;justify-content:center!important;width:22px!important;height:22px!important;color:rgba(255,255,255,.8)!important;text-decoration:none!important;font-size:16px!important}.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-popup-pane,.leaflet-tooltip-pane,.leaflet-marker-pane *,.leaflet-shadow-pane *,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-popup,.leaflet-tooltip{display:none!important;opacity:0!important;pointer-events:none!important}';document.head.appendChild(s)}
   function userName(u){return u.global_name||u.username||'Compte'}
-  function isAdminUser(u){return !!(u && (u.is_admin || u.grade==='Staff' || u.grade==='Fondateur' || u.grade==='SuperAdmin' || u.grade==='Admin'))}
-  function avatarUrl(u){
-    var a=(u&&u.avatar)||'';
-    if(a.indexOf('http')===0 || a.indexOf('/')===0)return a;
-    if(a && u.discord_id){var ext=a.indexOf('a_')===0?'gif':'png';return 'https://cdn.discordapp.com/avatars/'+u.discord_id+'/'+a+'.'+ext+'?size=128'}
-    return '/assets/newair-logo-swirl.png';
-  }
-  function hideCompteTab(){
-    document.querySelectorAll('a[href="/compte"],a[href="/compte/"]').forEach(function(a){
-      if(a.classList.contains('newair-connected-account'))return;
-      var li=a.closest('li');
-      if(li)li.style.display='none';else a.style.display='none';
-    });
-  }
-  function addAdminPanelLink(){
-    if(!currentUser || !isAdminUser(currentUser))return;
-    document.querySelectorAll('ul').forEach(function(ul){
-      var links=[].slice.call(ul.querySelectorAll('a'));
-      var hasHome=links.some(function(a){return (a.textContent||'').trim().toUpperCase()==='ACCUEIL'});
-      var hasAdmin=links.some(function(a){return (a.textContent||'').toUpperCase().indexOf('ADMIN')!==-1});
-      if(!hasHome||hasAdmin)return;
-      var li=document.createElement('li');
-      li.setAttribute('data-newair-admin','1');
-      li.innerHTML='<a href="/admin/" class="text-[11px] xl:text-xs font-bold tracking-[0.25em] xl:tracking-[0.3em] whitespace-nowrap transition-colors text-blue-200 hover:text-white">ADMIN PANEL</a>';
-      ul.appendChild(li);
-    });
-  }
-  function applyConnectedUser(u){
-    if(!u)return;
-    currentUser=u;
-    var name=userName(u);
-    var avatar=avatarUrl(u);
-    hideCompteTab();
-    document.querySelectorAll('a[href="/login"],a[href="/login/"],a.newair-connected-account').forEach(function(a){
-      a.href='javascript:void(0)';
-      a.onclick=function(ev){ev.preventDefault(); return false};
-      a.title=name;
-      a.classList.add('newair-connected-account');
-      a.innerHTML='<span class="newair-account-pill"><img referrerpolicy="no-referrer" src="'+avatar+'" onerror="this.src=\'/assets/newair-logo-swirl.png\'" alt=""><span>'+name+'</span></span>';
-      a.style.display='inline-flex';
-    });
-    addAdminPanelLink();
-  }
-  function checkServerSession(){
-    fetch('/api/user/me',{credentials:'include',cache:'no-store'})
-      .then(function(r){return r.ok?r.json():null})
-      .then(function(j){if(j&&j.ok&&j.user)applyConnectedUser(j.user)})
-      .catch(function(){});
-  }
-
-  function addTeamLink(){
-    document.querySelectorAll('ul').forEach(function(ul){
-      if(ul.getAttribute('data-newair-team')==='1')return;
-      var links=[].slice.call(ul.querySelectorAll('a'));
-      var hasHome=links.some(function(a){return (a.textContent||'').trim().toUpperCase()==='ACCUEIL'});
-      var hasTeam=links.some(function(a){return (a.textContent||'').trim().toUpperCase()==='ÉQUIPE'});
-      if(!hasHome||hasTeam)return;
-      ul.setAttribute('data-newair-team','1');
-      var li=document.createElement('li');
-      li.innerHTML='<a href="/equipe/" class="text-[11px] xl:text-xs font-bold tracking-[0.25em] xl:tracking-[0.3em] whitespace-nowrap transition-colors text-white/70 hover:text-white">ÉQUIPE</a>';
-      var compte=[].slice.call(ul.children).find(function(item){return (item.textContent||'').toUpperCase().indexOf('COMPTE')!==-1});
-      if(compte)ul.insertBefore(li,compte);else ul.appendChild(li)
-    })
-  }
-
-  function keepOnlyTikTok(){
-    document.querySelectorAll('a[href*="instagram.com"],a[href*="youtube.com"],a[aria-label*="Instagram" i],a[aria-label*="YouTube" i]').forEach(function(a){a.remove()});
-    var holders=[];document.querySelectorAll('a[href*="discord.gg"],a[href*="tiktok.com"]').forEach(function(a){if(a.parentElement)holders.push(a.parentElement)});
-    holders.forEach(function(holder){
-      if(holder.querySelector('a[data-newair-tiktok="1"],a[href*="tiktok.com"]'))return;
-      var link=document.createElement('a');link.href=tiktokUrl;link.target='_blank';link.rel='noreferrer';link.setAttribute('aria-label','TikTok');link.setAttribute('data-newair-tiktok','1');link.className='hover:text-white transition-colors';link.innerHTML=tiktokIcon;holder.appendChild(link)
-    })
-  }
-
-  function addStyle(){
-    if(document.getElementById('newair-light-style'))return;
-    var s=document.createElement('style');s.id='newair-light-style';
-    s.textContent='body>video,video[src*="bg.mp4"]{opacity:1!important;display:block!important;visibility:visible!important;filter:none!important}.newair-connected-account{max-width:245px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-color:rgba(95,150,214,.55)!important;background:rgba(11,42,91,.22)!important;color:#d9e9ff!important;box-shadow:0 0 20px rgba(95,150,214,.24)!important;padding:6px 10px!important;border-radius:999px!important}.newair-account-pill{display:inline-flex;align-items:center;gap:8px}.newair-account-pill img{width:26px;height:26px;border-radius:999px;object-fit:cover}.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-popup-pane,.leaflet-tooltip-pane,.leaflet-marker-pane *,.leaflet-shadow-pane *,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-popup,.leaflet-tooltip{display:none!important;opacity:0!important;pointer-events:none!important}';
-    document.head.appendChild(s)
-  }
-
-  function run(){addStyle();ensureVideo();fixPageBackdrops();hideMapPins();addTeamLink();keepOnlyTikTok();if(currentUser)applyConnectedUser(currentUser)}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){run();checkServerSession()},{once:true});else{run();checkServerSession()}
-  setTimeout(run,700);setTimeout(run,1800);setTimeout(run,4000);setTimeout(checkServerSession,1200);setTimeout(checkServerSession,3500);
+  function avatarUrl(u){var a=(u&&u.avatar)||'';if(a.indexOf('http')===0||a.indexOf('/')===0)return a;if(a&&u.discord_id){var ext=a.indexOf('a_')===0?'gif':'png';return 'https://cdn.discordapp.com/avatars/'+u.discord_id+'/'+a+'.'+ext+'?size=128'}return '/assets/newair-logo-swirl.png'}
+  function isAdmin(u){return !!(u&&(u.is_admin||['Staff','Fondateur','SuperAdmin','Admin'].indexOf(u.grade)!==-1))}
+  function status(){return String((currentUser&&currentUser.status)||'').toLowerCase()}
+  function left48(){if(status()!=='rejected')return 0;var t=Date.parse(currentUser.reviewed_at||'');if(!t)return 172800;return Math.max(0,172800-Math.floor((Date.now()-t)/1000))}
+  function fmt(s){var h=Math.floor(s/3600),m=Math.ceil((s%3600)/60);return h+'h '+String(m).padStart(2,'0')+'min'}
+  function blockWhitelist(sec){document.body.innerHTML='<video src="/video/bg.mp4" autoplay loop muted playsinline style="position:fixed;inset:0;width:100%;height:100%;object-fit:cover;z-index:0"></video><main style="position:relative;z-index:2;min-height:100vh;display:grid;place-items:center;color:white;background:rgba(0,0,0,.55);font-family:Arial;padding:20px"><section style="max-width:640px;border:1px solid rgba(95,150,214,.45);background:rgba(2,8,20,.84);border-radius:18px;padding:34px;text-align:center"><h1 style="font-family:Impact,Arial Black,sans-serif;font-size:48px;margin:0 0 14px">WHITELIST</h1><p>'+(sec>0?'Ta candidature a été refusée. Tu peux repostuler dans '+fmt(sec)+'.':'Ta candidature est acceptée, tu n’as plus besoin de refaire une whitelist.')+'</p><a href="/" style="display:inline-flex;margin-top:18px;color:white;text-decoration:none;border:1px solid rgba(95,150,214,.6);background:#0b2a5b;border-radius:10px;padding:12px 18px">Retour accueil</a></section></main>'}
+  function social(){document.querySelectorAll('a[href*="instagram.com"],a[href*="youtube.com"]').forEach(function(a){a.remove()});document.querySelectorAll('a[href*="discord.gg"],a[aria-label*="Discord" i]').forEach(function(a){if((a.textContent||'').toUpperCase().indexOf('REJOINDRE')!==-1||a.classList.contains('btn'))return;a.classList.add('newair-social-link');a.innerHTML='◖';a.setAttribute('aria-label','Discord')});document.querySelectorAll('a[href*="tiktok.com"],a[aria-label*="TikTok" i]').forEach(function(a){a.classList.add('newair-social-link');a.innerHTML='♪';a.setAttribute('aria-label','TikTok')})}
+  function hideCompte(){document.querySelectorAll('a[href="/compte"],a[href="/compte/"]').forEach(function(a){if(a.classList.contains('newair-connected-account'))return;var li=a.closest('li');if(li)li.style.display='none';else a.style.display='none'})}
+  function adminLink(){if(!isAdmin(currentUser))return;document.querySelectorAll('ul').forEach(function(ul){var txt=(ul.textContent||'').toUpperCase();if(txt.indexOf('ACCUEIL')===-1||txt.indexOf('ADMIN PANEL')!==-1)return;var li=document.createElement('li');li.innerHTML='<a href="/admin/" class="text-[11px] xl:text-xs font-bold tracking-[0.25em] xl:tracking-[0.3em] whitespace-nowrap transition-colors text-blue-200 hover:text-white">ADMIN PANEL</a>';ul.appendChild(li)});document.querySelectorAll('nav').forEach(function(nav){var txt=(nav.textContent||'').toUpperCase();if(txt.indexOf('ACCUEIL')===-1||txt.indexOf('ADMIN PANEL')!==-1)return;var a=document.createElement('a');a.href='/admin/';a.textContent='ADMIN PANEL';a.style.color='#d9e9ff';a.style.textDecoration='none';a.style.fontSize='11px';a.style.fontWeight='800';a.style.letterSpacing='.30em';var right=nav.querySelector('.right');if(right)nav.insertBefore(a,right);else nav.appendChild(a)})}
+  function whitelistState(){if(status()==='accepted'){document.querySelectorAll('a[href*="/whitelist"]').forEach(function(a){var li=a.closest('li');if(li)li.style.display='none';else a.style.display='none'});if(location.pathname.indexOf('/whitelist')===0)blockWhitelist(0)}var sec=left48();if(sec>0){document.querySelectorAll('a[href*="/whitelist"]').forEach(function(a){a.onclick=function(e){e.preventDefault();blockWhitelist(sec);return false}});if(location.pathname.indexOf('/whitelist')===0)blockWhitelist(sec)}}
+  function accountPill(u){currentUser=u;hideCompte();var name=userName(u),av=avatarUrl(u);document.querySelectorAll('a[href="/login"],a[href="/login/"],a.newair-connected-account').forEach(function(a){a.href='javascript:void(0)';a.onclick=function(e){e.preventDefault();return false};a.classList.add('newair-connected-account');a.innerHTML='<span class="newair-account-pill"><img src="'+av+'" onerror="this.src=\'/assets/newair-logo-swirl.png\'" alt=""><span>'+name+'</span></span>';a.style.display='inline-flex'});adminLink();whitelistState()}
+  function session(){fetch('/api/user/me',{credentials:'include',cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.ok&&j.user)accountPill(j.user)}).catch(function(){})}
+  function hidePins(){if(location.pathname.indexOf('/map')!==0)return;document.querySelectorAll('.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-popup-pane,.leaflet-tooltip-pane,.leaflet-marker-icon,.leaflet-marker-shadow').forEach(function(e){e.style.display='none'})}
+  function run(){addStyle();ensureVideo();social();hidePins();if(currentUser)accountPill(currentUser)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){run();session()},{once:true});else{run();session()}setTimeout(run,700);setTimeout(run,2000);setTimeout(session,1200);setTimeout(session,3500);
 })();
