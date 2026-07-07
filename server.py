@@ -279,8 +279,11 @@ class Handler(SimpleHTTPRequestHandler):
             if not ready(mode == "admin"):
                 return self.send_json({"ok": False, "error": "ENV Discord manquant sur Render"}, 500)
             state = secrets.token_urlsafe(24)
-            default_next = "/admin/" if mode == "admin" else "/"
-            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": (q.get("next") or [default_next])[0]}
+            if mode == "admin":
+                next_url = (q.get("next") or ["/admin/"])[0]
+            else:
+                next_url = "/"
+            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": next_url}
             c = cfg()
             url = "https://discord.com/oauth2/authorize?" + urlencode({"client_id": c["client_id"], "redirect_uri": c["redirect_uri"], "response_type": "code", "scope": "identify", "state": state})
             return self.redirect(url)
@@ -288,8 +291,10 @@ class Handler(SimpleHTTPRequestHandler):
             state = (q.get("state") or [""])[0]
             code = (q.get("code") or [""])[0]
             saved = OAUTH_STATES.pop(state, None)
-            if not code or not saved:
-                return self.redirect("/login")
+            if not code:
+                return self.redirect("/")
+            if not saved:
+                saved = {"mode": "user", "next": "/"}
             try:
                 token = exchange_code(code)
                 u = discord_user(token["access_token"])
@@ -304,10 +309,10 @@ class Handler(SimpleHTTPRequestHandler):
                     return self.redirect(saved.get("next") or "/admin/", f"{ADMIN_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400")
                 sid = secrets.token_urlsafe(32)
                 USER_SESSIONS[sid] = {"expires": time.time() + 31536000, "user": item}
-                return self.redirect(saved.get("next") or "/", f"{USER_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000")
+                return self.redirect("/", f"{USER_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000")
             except Exception as e:
                 print("auth error", e)
-                return self.redirect("/login")
+                return self.send_html("Connexion Discord impossible. Vérifie DISCORD_CLIENT_SECRET et DISCORD_REDIRECT_URI dans Render.", 500)
         if path == "/api/discord/logout":
             sid = self.cookie(USER_COOKIE)
             if sid:
