@@ -47,6 +47,12 @@
 
   function userName(u){return u.global_name||u.username||'Compte'}
   function isAdminUser(u){return !!(u && (u.is_admin || u.grade==='Staff' || u.grade==='Fondateur' || u.grade==='SuperAdmin' || u.grade==='Admin'))}
+  function avatarUrl(u){
+    var a=(u&&u.avatar)||'';
+    if(a.indexOf('http')===0 || a.indexOf('/')===0)return a;
+    if(a && u.discord_id){var ext=a.indexOf('a_')===0?'gif':'png';return 'https://cdn.discordapp.com/avatars/'+u.discord_id+'/'+a+'.'+ext+'?size=128'}
+    return '/assets/newair-logo-swirl.png';
+  }
   function hideCompteTab(){
     document.querySelectorAll('a[href="/compte"],a[href="/compte/"]').forEach(function(a){
       if(a.classList.contains('newair-connected-account'))return;
@@ -71,13 +77,14 @@
     if(!u)return;
     currentUser=u;
     var name=userName(u);
-    var avatar=u.avatar||'/assets/newair-logo-swirl.png';
+    var avatar=avatarUrl(u);
     hideCompteTab();
-    document.querySelectorAll('a[href="/login"],a[href="/login/"]').forEach(function(a){
-      a.href='/compte';
+    document.querySelectorAll('a[href="/login"],a[href="/login/"],a.newair-connected-account').forEach(function(a){
+      a.href='javascript:void(0)';
+      a.onclick=function(ev){ev.preventDefault(); return false};
       a.title=name;
       a.classList.add('newair-connected-account');
-      a.innerHTML='<span class="newair-account-pill"><img src="'+avatar+'" alt=""><span>'+name+'</span></span>';
+      a.innerHTML='<span class="newair-account-pill"><img referrerpolicy="no-referrer" src="'+avatar+'" onerror="this.src=\'/assets/newair-logo-swirl.png\'" alt=""><span>'+name+'</span></span>';
       a.style.display='inline-flex';
     });
     addAdminPanelLink();
