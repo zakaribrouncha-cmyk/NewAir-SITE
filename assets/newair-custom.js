@@ -46,17 +46,41 @@
   }
 
   function userName(u){return u.global_name||u.username||'Compte'}
+  function isAdminUser(u){return !!(u && (u.is_admin || u.grade==='Staff' || u.grade==='Fondateur' || u.grade==='SuperAdmin' || u.grade==='Admin'))}
+  function hideCompteTab(){
+    document.querySelectorAll('a[href="/compte"],a[href="/compte/"]').forEach(function(a){
+      if(a.classList.contains('newair-connected-account'))return;
+      var li=a.closest('li');
+      if(li)li.style.display='none';else a.style.display='none';
+    });
+  }
+  function addAdminPanelLink(){
+    if(!currentUser || !isAdminUser(currentUser))return;
+    document.querySelectorAll('ul').forEach(function(ul){
+      var links=[].slice.call(ul.querySelectorAll('a'));
+      var hasHome=links.some(function(a){return (a.textContent||'').trim().toUpperCase()==='ACCUEIL'});
+      var hasAdmin=links.some(function(a){return (a.textContent||'').toUpperCase().indexOf('ADMIN')!==-1});
+      if(!hasHome||hasAdmin)return;
+      var li=document.createElement('li');
+      li.setAttribute('data-newair-admin','1');
+      li.innerHTML='<a href="/admin/" class="text-[11px] xl:text-xs font-bold tracking-[0.25em] xl:tracking-[0.3em] whitespace-nowrap transition-colors text-blue-200 hover:text-white">ADMIN PANEL</a>';
+      ul.appendChild(li);
+    });
+  }
   function applyConnectedUser(u){
     if(!u)return;
     currentUser=u;
     var name=userName(u);
     var avatar=u.avatar||'/assets/newair-logo-swirl.png';
+    hideCompteTab();
     document.querySelectorAll('a[href="/login"],a[href="/login/"]').forEach(function(a){
       a.href='/compte';
       a.title=name;
       a.classList.add('newair-connected-account');
       a.innerHTML='<span class="newair-account-pill"><img src="'+avatar+'" alt=""><span>'+name+'</span></span>';
+      a.style.display='inline-flex';
     });
+    addAdminPanelLink();
   }
   function checkServerSession(){
     fetch('/api/user/me',{credentials:'include',cache:'no-store'})
@@ -92,11 +116,11 @@
   function addStyle(){
     if(document.getElementById('newair-light-style'))return;
     var s=document.createElement('style');s.id='newair-light-style';
-    s.textContent='body>video,video[src*="bg.mp4"]{opacity:1!important;display:block!important;visibility:visible!important;filter:none!important}.newair-connected-account{max-width:230px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-color:rgba(95,150,214,.55)!important;background:rgba(11,42,91,.22)!important;color:#d9e9ff!important;box-shadow:0 0 20px rgba(95,150,214,.24)!important}.newair-account-pill{display:inline-flex;align-items:center;gap:8px}.newair-account-pill img{width:22px;height:22px;border-radius:999px;object-fit:cover}.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-popup-pane,.leaflet-tooltip-pane,.leaflet-marker-pane *,.leaflet-shadow-pane *,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-popup,.leaflet-tooltip{display:none!important;opacity:0!important;pointer-events:none!important}';
+    s.textContent='body>video,video[src*="bg.mp4"]{opacity:1!important;display:block!important;visibility:visible!important;filter:none!important}.newair-connected-account{max-width:245px!important;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;border-color:rgba(95,150,214,.55)!important;background:rgba(11,42,91,.22)!important;color:#d9e9ff!important;box-shadow:0 0 20px rgba(95,150,214,.24)!important;padding:6px 10px!important;border-radius:999px!important}.newair-account-pill{display:inline-flex;align-items:center;gap:8px}.newair-account-pill img{width:26px;height:26px;border-radius:999px;object-fit:cover}.leaflet-marker-pane,.leaflet-shadow-pane,.leaflet-popup-pane,.leaflet-tooltip-pane,.leaflet-marker-pane *,.leaflet-shadow-pane *,.leaflet-marker-icon,.leaflet-marker-shadow,.leaflet-popup,.leaflet-tooltip{display:none!important;opacity:0!important;pointer-events:none!important}';
     document.head.appendChild(s)
   }
 
   function run(){addStyle();ensureVideo();fixPageBackdrops();hideMapPins();addTeamLink();keepOnlyTikTok();if(currentUser)applyConnectedUser(currentUser)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){run();checkServerSession()},{once:true});else{run();checkServerSession()}
-  setTimeout(run,700);setTimeout(run,1800);setTimeout(run,4000);setTimeout(checkServerSession,1200);
+  setTimeout(run,700);setTimeout(run,1800);setTimeout(run,4000);setTimeout(checkServerSession,1200);setTimeout(checkServerSession,3500);
 })();
