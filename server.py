@@ -1,7 +1,11 @@
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from http import cookies
-import json, os, secrets, time
+import json
+import os
+import secrets
+import time
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlencode, urlparse
 from urllib.request import Request, urlopen
 
@@ -18,6 +22,21 @@ ACCEPTED_ROLE_ID = os.environ.get("DISCORD_ACCEPTED_ROLE_ID", "15237674121037087
 REFUSED_ROLE_ID = os.environ.get("DISCORD_REFUSED_ROLE_ID", "1523768172291948674").strip()
 
 
+def clean(value):
+    value = str(value or "").strip()
+    if (value.startswith('"') and value.endswith('"')) or (value.startswith("'") and value.endswith("'")):
+        value = value[1:-1].strip()
+    return value
+
+
+def env(name):
+    return clean(os.environ.get(name, ""))
+
+
+def env_list(name):
+    return [clean(x) for x in os.environ.get(name, "").split(",") if clean(x)]
+
+
 def read_json(path, default):
     try:
         return json.loads(path.read_text(encoding="utf-8"))
@@ -30,31 +49,23 @@ def write_json(path, value):
     path.write_text(json.dumps(value, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def env_list(name):
-    return [x.strip() for x in os.environ.get(name, "").split(",") if x.strip()]
-
-
-def base_url():
-    return (os.environ.get("PUBLIC_BASE_URL") or os.environ.get("RENDER_EXTERNAL_URL") or "http://localhost:4174").rstrip("/")
-
-
 def cfg():
+    admin = env_list("DISCORD_ADMIN_ROLE_IDS")
     staff = env_list("DISCORD_STAFF_ROLE_IDS")
     superadmin = env_list("DISCORD_SUPERADMIN_ROLE_IDS")
     fondateur = env_list("DISCORD_FONDATEUR_ROLE_IDS")
     haut = env_list("DISCORD_HAUT_GRADE_PANEL_ROLE_IDS")
-    admin = env_list("DISCORD_ADMIN_ROLE_IDS")
     return {
-        "client_id": os.environ.get("DISCORD_CLIENT_ID", "").strip(),
-        "client_secret": os.environ.get("DISCORD_CLIENT_SECRET", "").strip(),
-        "bot_token": os.environ.get("DISCORD_BOT_TOKEN", "").strip(),
-        "guild_id": os.environ.get("DISCORD_GUILD_ID", "").strip(),
-        "redirect_uri": os.environ.get("DISCORD_REDIRECT_URI") or base_url() + "/api/discord/callback",
+        "client_id": env("DISCORD_CLIENT_ID"),
+        "client_secret": env("DISCORD_CLIENT_SECRET"),
+        "bot_token": env("DISCORD_BOT_TOKEN"),
+        "guild_id": env("DISCORD_GUILD_ID"),
+        "redirect_uri_env": env("DISCORD_REDIRECT_URI"),
+        "admin": admin,
         "staff": staff,
         "superadmin": superadmin,
         "fondateur": fondateur,
         "haut": haut,
-        "admin": admin,
         "all_admin_roles": admin + staff + superadmin + fondateur + haut,
     }
 
@@ -65,11 +76,19 @@ def ready(need_roles=False):
     return bool(base and (c["all_admin_roles"] or not need_roles))
 
 
-def api(url, headers=None, data=None, method=None):
+def call_json(url, headers=None, data=None, method=None):
     req = Request(url, headers=headers or {}, data=data, method=method)
-    with urlopen(req, timeout=12) as res:
-        raw = res.read().decode("utf-8")
-        return json.loads(raw) if raw else {}
+    try:
+        with urlopen(req, timeout=12) as res:
+            raw = res.read().decode("utf-8")
+            return json.loads(raw) if raw else {}
+    except HTTPError as e:
+        raw = e.read().decode("utf-8", "replace")
+        try:
+            detail = json.loads(raw)
+        except Exception:
+            detail = raw
+        raise RuntimeError(f"HTTP {e.code} Discord: {detail}")
 
 
 def avatar(user):
@@ -94,25 +113,25 @@ def grade_from_roles(roles):
     return None
 
 
-def exchange_code(code):
+def exchange_code(code, redirect_uri):
     c = cfg()
     body = urlencode({
         "client_id": c["client_id"],
         "client_secret": c["client_secret"],
         "grant_type": "authorization_code",
         "code": code,
-        "redirect_uri": c["redirect_uri"],
-    }).encode()
-    return api("https://discord.com/api/oauth2/token", {"Content-Type": "application/x-www-form-urlencoded"}, body)
+        "redirect_uri": redirect_uri,
+    }).encode("utf-8")
+    return call_json("https://discord.com/api/oauth2/token", {"Content-Type": "application/x-www-form-urlencoded"}, body)
 
 
 def discord_user(access_token):
-    return api("https://discord.com/api/users/@me", {"Authorization": "Bearer " + access_token})
+    return call_json("https://discord.com/api/users/@me", {"Authorization": "Bearer " + access_token})
 
 
 def discord_member(user_id):
     c = cfg()
-    return api(f"https://discord.com/api/guilds/{c['guild_id']}/members/{user_id}", {"Authorization": "Bot " + c["bot_token"]})
+    return call_json(f"https://discord.com/api/guilds/{c['guild_id']}/members/{user_id}", {"Authorization": "Bot " + c["bot_token"]})
 
 
 def upsert_user(user):
@@ -142,7 +161,7 @@ def put_role(discord_id, role_id, method):
         return False
     c = cfg()
     try:
-        api(f"https://discord.com/api/guilds/{c['guild_id']}/members/{discord_id}/roles/{role_id}", {"Authorization": "Bot " + c["bot_token"]}, data=b"" if method == "PUT" else None, method=method)
+        call_json(f"https://discord.com/api/guilds/{c['guild_id']}/members/{discord_id}/roles/{role_id}", {"Authorization": "Bot " + c["bot_token"]}, data=b"" if method == "PUT" else None, method=method)
         return True
     except Exception as e:
         print("role error", e)
@@ -181,7 +200,7 @@ def team_data():
     if not c["bot_token"] or not c["guild_id"]:
         return {"members": []}
     try:
-        data = api(f"https://discord.com/api/guilds/{c['guild_id']}/members?limit=1000", {"Authorization": "Bot " + c["bot_token"]})
+        data = call_json(f"https://discord.com/api/guilds/{c['guild_id']}/members?limit=1000", {"Authorization": "Bot " + c["bot_token"]})
         members = []
         for m in data:
             grade = grade_from_roles(m.get("roles", []))
@@ -206,7 +225,7 @@ class Handler(SimpleHTTPRequestHandler):
         super().end_headers()
 
     def send_json(self, value, status=200):
-        body = json.dumps(value, ensure_ascii=False).encode()
+        body = json.dumps(value, ensure_ascii=False).encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -214,7 +233,7 @@ class Handler(SimpleHTTPRequestHandler):
         self.wfile.write(body)
 
     def send_html(self, html, status=200):
-        body = html.encode()
+        body = html.encode("utf-8")
         self.send_response(status)
         self.send_header("Content-Type", "text/html; charset=utf-8")
         self.send_header("Content-Length", str(len(body)))
@@ -227,6 +246,14 @@ class Handler(SimpleHTTPRequestHandler):
         if cookie:
             self.send_header("Set-Cookie", cookie)
         self.end_headers()
+
+    def current_url_base(self):
+        proto = self.headers.get("X-Forwarded-Proto") or "https"
+        host = self.headers.get("Host") or env("PUBLIC_BASE_URL").replace("https://", "").replace("http://", "") or "localhost:4174"
+        return f"{proto}://{host}".rstrip("/")
+
+    def redirect_uri(self):
+        return cfg()["redirect_uri_env"] or self.current_url_base() + "/api/discord/callback"
 
     def cookie(self, name):
         jar = cookies.SimpleCookie()
@@ -262,6 +289,17 @@ class Handler(SimpleHTTPRequestHandler):
         if path in ("/compte", "/compte/"):
             s = self.current_user()
             return self.send_html(account_html(s["user"])) if s else self.redirect("/login")
+        if path == "/api/discord/debug":
+            c = cfg()
+            return self.send_json({
+                "ok": True,
+                "client_id_set": bool(c["client_id"]),
+                "client_secret_length": len(c["client_secret"]),
+                "bot_token_set": bool(c["bot_token"]),
+                "guild_id_set": bool(c["guild_id"]),
+                "redirect_uri_used": self.redirect_uri(),
+                "admin_roles_count": len(c["all_admin_roles"]),
+            })
         if path == "/api/team":
             return self.send_json(team_data())
         if path == "/api/user/me":
@@ -279,24 +317,20 @@ class Handler(SimpleHTTPRequestHandler):
             if not ready(mode == "admin"):
                 return self.send_json({"ok": False, "error": "ENV Discord manquant sur Render"}, 500)
             state = secrets.token_urlsafe(24)
-            if mode == "admin":
-                next_url = (q.get("next") or ["/admin/"])[0]
-            else:
-                next_url = "/"
-            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": next_url}
+            next_url = (q.get("next") or (["/admin/"] if mode == "admin" else ["/"]))[0]
+            redirect_uri = self.redirect_uri()
+            OAUTH_STATES[state] = {"expires": time.time() + 600, "mode": mode, "next": next_url, "redirect_uri": redirect_uri}
             c = cfg()
-            url = "https://discord.com/oauth2/authorize?" + urlencode({"client_id": c["client_id"], "redirect_uri": c["redirect_uri"], "response_type": "code", "scope": "identify", "state": state})
+            url = "https://discord.com/oauth2/authorize?" + urlencode({"client_id": c["client_id"], "redirect_uri": redirect_uri, "response_type": "code", "scope": "identify", "state": state})
             return self.redirect(url)
         if path == "/api/discord/callback":
             state = (q.get("state") or [""])[0]
             code = (q.get("code") or [""])[0]
-            saved = OAUTH_STATES.pop(state, None)
+            saved = OAUTH_STATES.pop(state, None) or {"mode": "user", "next": "/", "redirect_uri": self.redirect_uri()}
             if not code:
                 return self.redirect("/")
-            if not saved:
-                saved = {"mode": "user", "next": "/"}
             try:
-                token = exchange_code(code)
+                token = exchange_code(code, saved.get("redirect_uri") or self.redirect_uri())
                 u = discord_user(token["access_token"])
                 item = upsert_user(u)
                 if saved.get("mode") == "admin":
@@ -309,10 +343,10 @@ class Handler(SimpleHTTPRequestHandler):
                     return self.redirect(saved.get("next") or "/admin/", f"{ADMIN_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=86400")
                 sid = secrets.token_urlsafe(32)
                 USER_SESSIONS[sid] = {"expires": time.time() + 31536000, "user": item}
-                return self.redirect("/", f"{USER_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000")
+                return self.redirect(saved.get("next") or "/", f"{USER_COOKIE}={sid}; Path=/; HttpOnly; SameSite=Lax; Max-Age=31536000")
             except Exception as e:
                 print("auth error", e)
-                return self.send_html("Connexion Discord impossible. Vérifie DISCORD_CLIENT_SECRET et DISCORD_REDIRECT_URI dans Render.", 500)
+                return self.send_html(f"Connexion Discord impossible.<br><br>Erreur exacte : <pre>{esc(e)}</pre><br>Redirect utilisé : <code>{esc(saved.get('redirect_uri') or self.redirect_uri())}</code>", 500)
         if path == "/api/discord/logout":
             sid = self.cookie(USER_COOKIE)
             if sid:
